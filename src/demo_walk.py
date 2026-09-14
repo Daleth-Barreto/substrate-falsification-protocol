@@ -22,7 +22,7 @@ import nengo
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE))
 import bridge_g1
-from bridge_g1 import N_CHANNELS, CH_HEIGHT, CH_VX_OVERRIDE
+from bridge_g1 import (N_CHANNELS, CH_HEIGHT, CH_VX_OVERRIDE)
 
 import cl
 from cl.sim import (SimulatorDataSourceMetadata, set_simulator_data_source)
@@ -33,6 +33,11 @@ BASE_VX = 0.5
 HUB_DT = 0.002
 HUB_HORIZON_STEPS = 600   # 1.2 s of hub time per chunked run (amortises ~100ms call overhead)
 
+TAU_HIP_L = 1   # left_hip_roll actuator id
+TAU_HIP_R = 7   # right_hip_roll actuator id
+TAU_SIGN = 1.0
+TAU_UNITS = 0.75   # decoder-units cap (=> 3 uA stim, => TAU_GAIN*0.75 Nm torque)
+
 T = {"t": 0.0}
 
 
@@ -41,10 +46,12 @@ def _sig(z):
 
 
 def decide(x):
-    roll, pitch, hsig, nspk, _ = x
+    roll, pitch, thsig, nspk, _ = x
     gate = _sig(30.0 * (nspk - 0.15))
-    slow = 1.0 - 0.6 * _sig(20.0 * (max(roll, pitch) - 1.2))
-    return float(BASE_VX * gate * slow)
+    slow = 1.0 - 0.9 * _sig(10.0 * (max(abs(roll), abs(pitch)) - 0.9))
+    vx = BASE_VX * (1.0 + 1.0 * np.tanh(2.5 * (thsig - 0.15))) * gate * slow
+    tau = TAU_UNITS * np.tanh(2.0 * TAU_SIGN * roll)
+    return [float(vx), float(tau)]
 
 
 def build_hub(holder):
@@ -52,7 +59,7 @@ def build_hub(holder):
     with net:
         inp = nengo.Node(lambda t: holder["last_x"], size_in=0, size_out=5)
         ensemble = nengo.Ensemble(1000, 5, radius=2.0, neuron_type=nengo.LIF())
-        out = nengo.Node(size_in=1)
+        out = nengo.Node(size_in=2)
         p = nengo.Probe(out, "output", synapse=None)
         nengo.Connection(inp, ensemble, synapse=0.03)
         nengo.Connection(ensemble, out, function=decide, synapse=0.05)
@@ -66,7 +73,7 @@ class HubThread:
 
     def __init__(self, inp, out, p, sim):
         self.inp, self.out, self.p, self.sim = inp, out, p, sim
-        self.latest = np.array(0.0)
+        self.latest = np.array([0.0, 0.0])
         self._stop = False
         self.thread = threading.Thread(target=self._run, daemon=True)
 
@@ -83,7 +90,7 @@ class HubThread:
     def _run(self):
         while not self._stop:
             self.sim.run_steps(HUB_HORIZON_STEPS)
-            self.latest = float(self.sim.data[self.p][-1][0])
+            self.latest = np.asarray(self.sim.data[self.p][-1]).ravel()
 
 
 def main():
@@ -131,7 +138,7 @@ def main():
             ])
             with counts_holder["lock"]:
                 counts_holder["last_x"] = x
-            cmd = float(max(0.0, min(2.2, hub.latest)))
+            cmd = float(max(0.0, min(2.2, hub.latest[0])))
             if abs(cmd - applied) > 0.1:
                 applied = cmd
                 if applied > 1e-3:

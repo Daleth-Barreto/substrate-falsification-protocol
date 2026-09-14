@@ -22,7 +22,7 @@ from cl.sim import (DataSourceBatch, DataSourceSpike, DataSourceStim,
                     SimulatorDataSource, SimulatorDataSourceMetadata)
 
 _SRC = Path(__file__).resolve().parent
-SNN_SRC = _SRC.parent.parent / "01_snn" / "src"
+SNN_SRC = Path("C:/Proyectos/papers/Icra2027/01_snn/src")
 TELEMETRY_PATH = str(Path.home() / "AppData" / "Local" / "Temp" / "opencode"
                      / "bridge_telemetry.json")
 sys.path.insert(0, str(SNN_SRC))
@@ -37,14 +37,20 @@ SAMPLE_RATE = 25000
 CTRL_HZ = 50
 SAMPLES_PER_CTRL = SAMPLE_RATE // CTRL_HZ
 STIM_UA_PER_MS = 4.0   # stimulation uA per 1 m/s of commanded velocity
+TAU_GAIN = 40.0        # Nm per decoder unit on torque channels (<12)
 
 
 class G1DataSource(SimulatorDataSource):
     def __init__(self, duration_sec: float = 14.0, cmd_vx: float = 0.8,
-                 seed: int = 0):
+                 seed: int = 0, perturb: list | None = None,
+                 task: list | None = None):
         self.duration_sec = duration_sec
         self.cmd_vx = float(cmd_vx)
         self.seed = seed
+        self.perturbations = perturb or []
+        self.task_sched = task or []
+        self._pelvis_id = None
+        self._perturbed_steps = 0
         self._rng = np.random.default_rng(seed)
         from deploy12 import Deploy12
         self.dep = Deploy12()
@@ -88,6 +94,13 @@ class G1DataSource(SimulatorDataSource):
     def _channel_base(self, i):
         return 21000 + 900 * (i % 5)
 
+    def _task_vx(self, t):
+        v = None
+        for t0, vx in self.task_sched:
+            if t >= t0:
+                v = vx
+        return v
+
     def _read_sensors(self):
         d = self.dep.data
         err = self.dep.target - d.qpos[7:]
@@ -110,9 +123,19 @@ class G1DataSource(SimulatorDataSource):
         self.dep.refresh_cmd()
         self.dep.cmd[0] = (self.cmd_override
                            if self.cmd_override is not None else self.cmd_vx)
+        if self._pelvis_id is None:
+            self._pelvis_id = self.dep.model.body("pelvis").id
         for _ in range(self.dep.dec):
             if self.dep.data.time > self.duration_sec:
                 break
+            t = self.dep.data.time
+            f = np.zeros(3)
+            for pw in self.perturbations:
+                if pw["t0"] <= t < pw["t0"] + pw["dur"]:
+                    f += np.asarray(pw.get("force", [0.0, 0.0, 0.0]), dtype=float)
+            self.dep.data.xfrc_applied[self._pelvis_id, :3] = f
+            if np.any(f != 0.0):
+                self._perturbed_steps += 1
             self.dep.data.ctrl[:] = self.dep.analog_pd_tau() + self.tau_overlay
             import mujoco
             mujoco.mj_step(self.dep.model, self.dep.data)
@@ -154,6 +177,9 @@ class G1DataSource(SimulatorDataSource):
                         "max_us": round(1e6 * st["max"], 2) if st["max"] else None,
                         "min_us": round(1e6 * st["min"], 2) if st["min"] != float("inf") else None,
                     },
+                    "perturbations": self.perturbations,
+                    "perturbed_steps": self._perturbed_steps,
+                    "task_sched": self.task_sched,
                 }, fp)
         except Exception:
             pass
@@ -169,8 +195,13 @@ class G1DataSource(SimulatorDataSource):
         if CH_HUB_CTX < n_ch:
             s_vals[CH_HUB_CTX] = self.hub_ctx
         if CH_VX_OVERRIDE < n_ch:
-            s_vals[CH_VX_OVERRIDE] = (self.cmd_override
-                                      if self.cmd_override is not None else 0.0)
+            if self.task_sched:
+                s_vals[CH_VX_OVERRIDE] = (self._task_vx(self.dep.data.time)
+                                          or 0.0)
+            else:
+                s_vals[CH_VX_OVERRIDE] = (self.cmd_override
+                                          if self.cmd_override is not None
+                                          else 0.0)
         for i in range(n_ch):
             s = s_vals[i]
             if abs(s) < 0.1:
@@ -227,10 +258,10 @@ class G1DataSource(SimulatorDataSource):
         elif stim.phase_durations_us:
             v = float(np.sum(stim.phase_durations_us)) / 1e6 / 1e3
         if 0 <= ch < 12:
-            self.tau_overlay[ch] = float(np.clip(v, -40, 40))
+            self.tau_overlay[ch] = float(np.clip(v * TAU_GAIN, -40, 40))
             self.hub_ctx = 0.5
         elif ch == CH_VX_OVERRIDE:
-            self.cmd_override = float(np.clip(v, 0.0, 2.2))
+            self.cmd_override = float(np.clip(v, 0.0, 0.75))
             self.hub_ctx = 0.9
         else:
             self.hub_ctx = min(1.0, self.hub_ctx + 0.1)
@@ -250,5 +281,7 @@ class G1DataSource(SimulatorDataSource):
         }
 
 
-def create(duration_sec: float = 14.0, cmd_vx: float = 0.8, seed: int = 0):
-    return G1DataSource(duration_sec=duration_sec, cmd_vx=cmd_vx, seed=seed)
+def create(duration_sec: float = 14.0, cmd_vx: float = 0.8, seed: int = 0,
+           perturb: list | None = None, task: list | None = None):
+    return G1DataSource(duration_sec=duration_sec, cmd_vx=cmd_vx, seed=seed,
+                        perturb=perturb, task=task)

@@ -7,7 +7,7 @@ decoder turns it into the forward-velocity command.
 Modes:
   neural  - real Nengo hub decode (baseline closed loop).
   zero    - decoder ablated to 0: no stims, no cultural influence on vx command.
-  random  - decoder replaced by a random walk in [0, BASE_VX] decoupled from
+  random  - decoder replaced by a random walk in [0, 2*BASE_VX] decoupled from
             the spike counts: tests whether decoded spike signal carries control.
   mask0.5 - lesion: 50% of spike channels silenced before the hub decodes
             (proxy for damaged culture / noisy readout).
@@ -31,15 +31,22 @@ import cl
 from cl.sim import (SimulatorDataSourceMetadata, set_simulator_data_source)
 
 import bridge_g1
-from bridge_g1 import N_CHANNELS, CH_HEIGHT, CH_VX_OVERRIDE, TELEMETRY_PATH
-from demo_walk import BASE_VX, TPS, build_hub, HubThread
+from bridge_g1 import (N_CHANNELS, CH_HEIGHT, CH_VX_OVERRIDE, TELEMETRY_PATH,
+                       STIM_UA_PER_MS)
+from demo_walk import BASE_VX, TPS, build_hub, HubThread, TAU_HIP_L, TAU_HIP_R
 
 DURATION_SEC = 12.0
 THR = -1400
 OVERRUN_US = 25_000  # 1/TPS in microseconds
+TAU_DEADBAND = 0.05
+VX_DEADBAND = 0.1
 
 MODES = ["neural", "zero", "random", "mask0.5"]
 MASK_FRAC = 0.5
+
+
+def _stim_current(value):
+    return float(max(-0.75, min(0.75, value))) * STIM_UA_PER_MS
 
 
 def read_telemetry(retries: int = 30):
@@ -62,11 +69,13 @@ def read_telemetry(retries: int = 30):
     return walk, walk_series
 
 
-def run_mode(mode: str, seed: int = 7):
+def run_mode(mode: str, seed: int = 7, perturb: list | None = None,
+             task: list | None = None):
     step0 = time.monotonic()
     set_simulator_data_source(
         "bridge_g1:create",
-        config={"duration_sec": DURATION_SEC, "cmd_vx": BASE_VX, "seed": seed},
+        config={"duration_sec": DURATION_SEC, "cmd_vx": BASE_VX, "seed": seed,
+                "perturb": perturb, "task": task},
         metadata=SimulatorDataSourceMetadata(
             channel_count=N_CHANNELS,
             frames_per_second=25000,
@@ -89,9 +98,10 @@ def run_mode(mode: str, seed: int = 7):
     else:
         lesion_ch = set()
 
-    log_t, log_cmd, log_nspk, log_h = [], [], [], []
+    log_t, log_cmd, log_nspk, log_h, log_tau, log_t62 = [], [], [], [], [], []
     prev = np.zeros(N_CHANNELS)
-    applied = 0.0
+    applied_vx = 0.0
+    applied_tau = 0.0
     last_iter_wall = None
     intervals_us = []
     wall0 = time.monotonic()
@@ -117,33 +127,41 @@ def run_mode(mode: str, seed: int = 7):
             x = np.array([
                 float(min(30.0, counts[12]) / 8.0),
                 float(min(30.0, counts[13]) / 8.0),
-                0.0,
+                float(min(30.0, counts[CH_VX_OVERRIDE]) / 4.0),
                 float(min(30.0, counts.sum()) / 8.0),
                 float(min(5.0, counts[63]) / 2.0),
             ])
             with holder["lock"]:
                 holder["last_x"] = x
-            hub_latest = float(max(0.0, min(2.2, hub.latest)))
+            hub_l = np.asarray(hub.latest).ravel()
+            hub_vx = float(max(0.0, min(2.2, hub_l[0] if len(hub_l) else 0.0)))
+            hub_tau = float(hub_l[1] if len(hub_l) > 1 else 0.0)
 
-            if mode == "neural":
-                cmd = hub_latest
+            if mode in ("neural",) or mode.startswith("mask"):
+                vx_cmd, tau_cmd = hub_vx, hub_tau
             elif mode == "zero":
-                cmd = 0.0
+                vx_cmd, tau_cmd = 0.0, 0.0
             elif mode == "random":
-                cmd = float(rng.uniform(0.0, BASE_VX))
-            elif mode.startswith("mask"):
-                cmd = hub_latest
+                vx_cmd = float(rng.uniform(0.0, 0.75))
+                tau_cmd = float(rng.uniform(-0.75, 0.75))
             else:
-                cmd = hub_latest
+                vx_cmd, tau_cmd = hub_vx, hub_tau
 
-            if abs(cmd - applied) > 0.1:
-                applied = cmd
-                if applied > 1e-3:
-                    neurons.stim(CH_VX_OVERRIDE, applied * bridge_g1.STIM_UA_PER_MS)
+            if abs(vx_cmd - applied_vx) > VX_DEADBAND:
+                applied_vx = vx_cmd
+                if applied_vx > 1e-3:
+                    neurons.stim(CH_VX_OVERRIDE, _stim_current(applied_vx))
+            if abs(tau_cmd - applied_tau) > TAU_DEADBAND:
+                applied_tau = tau_cmd
+                if abs(applied_tau) > 1e-3:
+                    neurons.stim(TAU_HIP_L, _stim_current(applied_tau))
+                    neurons.stim(TAU_HIP_R, _stim_current(-applied_tau))
             log_t.append(tick.iteration / TPS)
-            log_cmd.append(cmd)
+            log_cmd.append(vx_cmd)
+            log_tau.append(applied_tau)
             log_nspk.append(nspk)
             log_h.append(float(counts[CH_HEIGHT]))
+            log_t62.append(float(counts[CH_VX_OVERRIDE]))
 
     wall = time.monotonic() - wall0
     hub.stop()
@@ -153,7 +171,8 @@ def run_mode(mode: str, seed: int = 7):
     pct = np.percentile(iv, [50, 95, 99]) if iv.size else [None] * 3
     overruns = int(np.sum(iv > OVERRUN_US)) if iv.size else None
     stims = sum(1 for i in range(1, len(log_cmd))
-                if abs(log_cmd[i] - log_cmd[i - 1]) > 0.01)
+                if abs(log_cmd[i] - log_cmd[i - 1]) > 0.01
+                or abs(log_tau[i] - log_tau[i - 1]) > TAU_DEADBAND)
 
     res = {
         "mode": mode,
@@ -161,6 +180,7 @@ def run_mode(mode: str, seed: int = 7):
         "duration_sec": DURATION_SEC,
         "wall_time": round(wall, 2),
         "mean_cmd": round(float(np.mean(log_cmd)), 3),
+        "mean_tau": round(float(np.mean(np.abs(log_tau))), 3),
         "stim_events": stims,
         "mean_nspk": round(float(np.mean(log_nspk)), 2),
         "walker": walk,
@@ -177,6 +197,8 @@ def run_mode(mode: str, seed: int = 7):
     }
     # short series for figures (keep cmd at full res, downsample the rest)
     res["cmd_series"] = [round(v, 3) for v in log_cmd]
+    res["tau_series"] = [round(v, 3) for v in log_tau]
+    res["ch62_series"] = [round(v, 2) for v in log_t62]
     res["height_channel_series"] = [round(v, 0) for v in log_h]
     res["walker_series"] = [[round(s[0], 3), round(s[1], 4), round(s[2], 4)]
                             for s in walk_series]
