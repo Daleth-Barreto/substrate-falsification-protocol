@@ -1,0 +1,3 @@
+Vendored from https://github.com/m9h/bl1 (MIT).
+Commit: 91f7c01891ebae7f17190bf81a7b7b6fe3c0cf4e (main), shallow clone, .git stripped.
+Vendored 2026-09-14 for the substrate-interchangeability experiment (F4).
