@@ -1,0 +1,15 @@
+% TABLA Gateway D: reader desenchufado (MISMAS spikes, decodificadores)
+% desde gate_d_summary.json (pooled 5 perfiles x 6 seeds)
+\begin{tabular}{llrrrrrr}
+\toprule
+substrate & decoder & $\widehat{\mathrm{RMSE}}$ & $\mathrm{MI}$ & $\rho$ & $\mathrm{TE}$ & carried & $\mathrm{MI}_{\mathrm{sig}}$ \\
+\midrule
+LIF & canonical & 0.168 & 0.651 & 0.765 & 9e-05 & -- & 0.800 \\
+LIF & ridge (opt. lin.) & 0.055 & 0.391 & 0.733 & -- & 0.094 & 0.800 \\
+Izhikevich & canonical & 0.239 & 0.385 & 0.633 & 7e-06 & -- & 0.800 \\
+Izhikevich & ridge (opt. lin.) & 0.157 & 0.250 & 0.458 & -- & -0.008 & 0.767 \\
+Poisson (dead null) & canonical & 0.392 & 0.000 & -0.000 & 0e+00 & -- & 0.000 \\
+Poisson (dead null) & ridge (opt. lin.) & 0.158 & 0.018 & 0.038 & -- & -0.009 & 0.033 \\
+\bottomrule
+\end{tabular}
+% floor problema: meanpd=0.149  upper-baseline: passthru=0.000

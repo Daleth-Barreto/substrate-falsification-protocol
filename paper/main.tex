@@ -1,0 +1,315 @@
+%%====================================================================
+%%  Which substrate computes? A matched dead-null protocol for
+%%  embodied spiking substrates (method note, short)
+%%
+%%  Build (MiKTeX, the light compiler already on PATH):
+%%      cd sandbox/paper && latexmk -pdf main.tex
+%%  or pdflatex twice.
+%%
+%%  All numbers injected from JSON artifacts (not hand-typed except
+%%  this file's prose). Regenerate tables/figures with:
+%%      python sandbox/build_figures_tables.py
+%%====================================================================
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,urlcolor=blue,citecolor=blue,linkcolor=blue]{hyperref}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage{float}
+
+\input{tables/canonical_numbers.tex}
+
+\newcommand{\sub}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\RMSE}{\ensuremath{\mathrm{RMSE}}}
+\newcommand{\MI}{\ensuremath{\mathrm{MI}}}
+\newcommand{\TE}{\ensuremath{\mathrm{TE}}}
+
+\title{\vspace{-1.5em}Which substrate computes?\\[0.3em]
+{\large A matched dead-substrate null and readout controls for embodied
+spiking substrates}\vspace{-0.5em}}
+
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\vspace{-3em}
+
+\begin{abstract}
+\noindent
+When a population of spiking neurons is read out to control a simulated
+body, ``the substrate computes'' is usually claimed from a decoded
+error or a mutual-information value. We show that such claims are
+unfalsifiable unless the substrate is swapped for a \emph{dead}
+substrate that preserves the marginal statistics of the spike train.
+We build a minimal embodied hub (2,000\% neurons, fixed sparse wiring,
+one calibrated decision map) and run three gates: (B) substrate swap
+under a fixed readout; (D) optimal linear readout of the \emph{same}
+spikes; (E) memory-demanding tasks. The dead substratum retains exactly
+zero task information under every readout (MI $\approx 0$, TE $= 0$,
+$\rho \approx 0$, all seeds, all profiles). The living substrates do
+not uniformly survive: LIF carries information through an optimal
+linear readout ($\Delta\RMSE = +0.094$ vs.\ the mean-predictor floor),
+whereas the apparent Izhikevich tracking seen under the fixed
+calibrated readout is largely a \emph{readout-channel artifact}:
+decoding the same spikes optimally leaves it indistinguishable from
+the floor. We conclude that (i) negative controls for the \emph{material}
+of a substrate are cheap and decisive; (ii) claims of embodiment must
+be made against the exact-zero null, not against scoreboards; and
+(iii) the open-loop diagnosis cannot certify memory, which must be
+demonstrated in the closed loop.
+\end{abstract}
+
+\section{Problem and hypothesis}\label{sec:problem}
+Take a fixed wiring $\mathbf{g},\mathbf{W},\mathbf{w}_r$ (input
+projection $\mathbf{g}\in\mathbb{R}^{N}$, sparse recurrence
+$\mathbf{W}$, readout projection $\mathbf{w}_r$), an input profile
+$u(t)$ sampled to $N_{\mathrm{win}}$ control windows, and a decision map
+$\hat{x}=\mathrm{decide}(\theta_k)$. Swapping only the \emph{material}--
+the per-neuron dynamics--while keeping wiring and the readout identical
+lets us ask: \emph{does the substrate carry the task signal, or does
+the readout-on-wiring do all the work?}
+
+Hypothesis under test:
+\begin{quote}
+Resistance to a \emph{dead null} (a substrate that fires with the same
+marginal rates but is statistically independent of $u$) is the weakest
+correct certificate that the substrate computes; the stronger claim
+requires the correct information to survive an \emph{optimal linear
+readout} of the same spikes, and--for memory--a closed-loop task.
+\end{quote}
+
+Everything below is minimal, seeded, and reproducible
+(\S\ref{sec:repro}). The canonical closed-loop result of the parent
+project is \RMSE $=\canRMSE$ for the neural substrate vs.\ visible
+ablations with exact paired permutation $p_{\mathrm{1s}}=\canPone$,
+$p_{\mathrm{2s}}=\canPtwo$ and Cohen $d_z=\canDzRnd$ (random-mask) /
+$\canDzMask$ (mask 0.5); those numbers are owned by the tracking
+session and cited here as read-only reference
+(\S\ref{sec:canonical}).
+
+\section{Methods}\label{sec:methods}
+\paragraph{Hub.}
+$N=2000$ neurons, $N_{\mathrm{win}}=200$ control windows, $40$ integration
+steps per window. Wiring is seeded sparse; $W$ uses the previous window;
+$\mathbf{w}_r=\mathbf{g}$ (channel aligned with the input projection,
+calibrated $k_{\mathrm{ro}}$ per substrate). The decision map is the
+verbatim calibrated one used in the canonical tracking code. Five control
+profiles ($\mathtt{baseline},\mathtt{multi\_step},\mathtt{sine},
+\mathtt{descend},\mathtt{pulse}$), six seeds $\{1,7,13,29,55,91\}$.
+
+\paragraph{Substrates.}
+LIF (leaky integrate-and-fire, $\tau=40$ ms) and Izhikevich regular
+spiking ($d=8$ adaptation), and the \emph{dead null} \texttt{Poisson}:
+per-neuron Poisson rates matched to LIF's marginal histogram
+(mean \SI{8.09}{spike\,s^{-1}} each), \emph{statistically independent}
+of $u$. All three use identical wiring, bias, drive and readout
+constants; only the dynamics differ.
+
+\paragraph{Decoders (Gate D).}
+On the \emph{same} recorded spike trains:
+\begin{enumerate}[nosep]
+\item \textbf{canon}--the fixed calibrated channel $k_{\mathrm{ro}}
+\mathbf{w}_r\!\cdot(\text{rates})$ + \texttt{decide};
+\item \textbf{ridge}--optimal L2-regularized linear readout of the
+population counts, fit in nested train/val/test windows (interleaved
+splits keep every phase in every fold), solved via the Woodbury
+identity with 13 lambdas in $[10^{-5},10]$ and bias via centering;
+verified against a direct solve (max diff $<4\times10^{-10}$);
+\item \textbf{meanpd}--constant-predictor floor
+($\mathrm{var}$-around-run-mean);
+\item \textbf{passthru}--$0.75u$ directly ($\RMSE=0$ by construction,
+ceiling).
+\end{enumerate}
+``carried info'' $=$ $\RMSE_{\mathrm{meanpd}}-\RMSE_{\mathrm{ridge}}$.
+
+\paragraph{Memory (Gate E).}
+Three history-dependent tasks (\texttt{lag}: 4-window delayed
+reference; \texttt{integ}: running integral smoothed over 8 windows;
+\texttt{stair}: staircase level switch) decoded by the ridge of the
+present-window spikes vs.\ an 8-tap FIR over the input only. The dead
+null here is the same Poisson substrate; ``transposing past into
+present spikes'' would show as a positive \emph{carried} for the neural
+substrates.
+
+\section{Results}\label{sec:results}
+
+\subsection{Gate B: substrate swap under a fixed readout}\label{sec:gateb}
+\input{tables/tab_gateb.tex}
+% Table 1 above
+Under the fixed calibrated readout, LIF and IZH both beat the dead null
+on every profile; the dead null stays at $\MI\approx0$,
+$\TE\approx0$, $\rho\approx0$. Taken alone this would read as
+``the neural substrates compute'' -- this is precisely the reading that
+Gate D corrects.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/gate_b.png}
+\caption{Gate B: substrate swap under the fixed calibrated readout
+(five control profiles, six seeds).}
+\label{fig:gateb}
+\end{figure}
+
+\subsection{Gate D: is it the readout?}\label{sec:gated}
+\input{tables/tab_gated.tex}
+% Table 2 above
+Table~2 (pooled over the five profiles, six seeds) shows the key
+result. The ridge readout of \emph{the same spikes}:
+\begin{itemize}[nosep]
+\item \textbf{LIF}: drops \RMSE{} to 0.055 -- the fixed channel had
+left information on the table (canon-to-ridge gap $+0.113$), and the
+spikes genuinely carry the task ($\MI$ significant $0.80$ fraction,
+carried $+0.094$);
+\item \textbf{Izhikevich}: the fixed-channel ``tracking'' does \emph{not}
+persist -- ridge collapses to 0.157 (approx. mean-predictor)
+(0.149), carried $\approx 0$ ($-0.008$). The Gate~B IZH gap was
+largely a \emph{readout-channel artifact}: $\mathbf{w}_r=\mathbf{g}$ is
+pre-aligned with the input projection. An ablation that randomizes
+$\mathbf{w}_r$ (verify/verify\_wr.py) collapses \emph{both} living
+substrates to the null floor, confirming the channel, not the substrate
+material, held the Gate~B signal. IZH retains only weak MI
+($0.25$; sig.\ in $23/30$ runs) under the optimal readout.
+\item \textbf{Dead null}: ridge 0.158 $\approx$ floor, MI $\approx 0$
+(frac.\ $0.03$), \TE{} exactly $0$ -- the exact-zero null survives the
+optimal linear decoder.
+\end{itemize}
+Recurrence ablation (nohub) leaves canon \RMSE{} unchanged to
+$<0.001$; the mini is effectively feed-forward.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/gate_d.png}
+\caption{Gate D: the fixed-channel ``tracking'' vs.\ the optimal linear
+readout of the \emph{same} spikes.}
+\label{fig:gated}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/decoder_bars.png}
+\caption{Decoder ladder: canonical channel, ridge, mean-predictor
+floor and passthru ceiling per substrate, pooled.}
+\label{fig:decoders}
+\end{figure}
+
+\subsection{Gate E: is it memory?}\label{sec:gatee}
+\input{tables/tab_gatee.tex}
+% Table 3 above
+Negative result. Under memory demand the dead null stays dead
+(carried $-0.006$), but \emph{neither} LIF (carried $-0.13$) nor
+Izhikevich ($-0.06$) transposes the past into present-window spikes;
+an 8-tap FIR over the input solves the linearly-recoverable tasks
+(carried $+0.14\ldots+0.15$). The mini therefore cannot certify
+substrate memory. This is consistent with a feed-forward diagnostic;
+functional memory claims must be made in the closed loop
+(\S\ref{sec:canonical}).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/gate_e.png}
+\caption{Gate E: memory-demanding profiles.}
+\label{fig:gatee}
+\end{figure}
+
+\subsection{Canonical closed-loop numbers (read-only reference)}\label{sec:canonical}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\linewidth]{figures/canonical.png}
+\caption{Canonical closed-loop battery of the parent project
+(owned by the tracking session; copied read-only, see
+\texttt{figures/ATTRIBUTION.txt}). Neural RMSE $\canRMSE\pm0.010$
+vs.\ ablations; exact paired permutation $p_{\mathrm{2s}}=\canPtwo$,
+$p_{\mathrm{1s}}=\canPone$, $d_z=\canDzRnd$ / $\canDzMask$. Reproduced
+from \texttt{surrogate\_cl/results/task\_tracking.json}.}
+\label{fig:canonical}
+\end{figure}
+The closed-loop results of the parent project are the only place where
+substrate information is tested against the task itself. They are read
+here (never regenerated) and cited as the reference check.
+
+\subsection{Verification (robustness, not bugs)}\label{sec:verify}
+Three independent checks confirm the above is not an implementation
+artifact (\path{sandbox/verify/}):
+\begin{itemize}[nosep]
+\item \texttt{verify\_ridge.py}--Woodbury ridge equals a direct
+least-squares solve (max $|\Delta|<4\times10^{-10}$), $\lambda$ grid
+wide, bias centered: the optimal linear readout numbers are exactly the
+solver's;
+\item \texttt{verify\_null.py}--Poisson dead null on two seeds outside the
+calibrated family $\{103,201\}$: $\MI=0$, $\TE=0$, $\rho=0$, exact;
+\item \texttt{verify\_wr.py}--randomizing $\mathbf{w}_r$ collapses LIF and
+IZH to the floor while the null is unaffected, isolating the aligned
+channel as the carrier of the Gate~B signal.
+\end{itemize}
+
+\section{Discussion}\label{sec:discussion}
+\paragraph{What survives.}
+The dead-source null is not just a benchmark--it is the \emph{weakest
+honest certificate}: a substrate indistinguishable from independent
+Poisson firing is not computing the task, on any readout we tried,
+including the optimal linear one and memory demands. We believe this
+``matched dead-substrate null + decoder-invariance'' protocol is the
+correct unit to slot in next to decoder ablations in the embodied-AI
+literature (cf.\ \cite{kagan2022dishbrain,balci2023neurons,millar2025}). 
+
+\paragraph{What does not.}
+The Izhikevich result is the sharp consequence: a substrate can look
+tracked under an \emph{aligned} readout yet carry almost nothing to an
+optimal decoder; conversely LIF carries a real rate code. Readout
+choice is therefore a \emph{substantive} modeling decision, not a
+detail. Overselling ``intelligence on a dish'' (or in a loop) without
+these controls is exactly the pattern that recent commentary warns
+against \cite{balci2023neurons}; our protocol makes the claim
+falsifiable.
+
+\paragraph{Limits.}
+The mini is open-loop and feed-forward; history-dependent inference is
+explicitly \emph{not} certified here (Gate E negative). A closed-loop
+functional test (perturbation/memory) is required before any ``the
+substrate computes for the robot'' claim; that is the canonical battery
+cited in \S\ref{sec:canonical} and its successors. Only LIF--of the
+three \emph{materials}--survives the readout controls as a carrier of
+task information, and only for the rate-code tasks.
+
+\section{Reproducibility}\label{sec:repro}
+\begin{itemize}[nosep]
+\item Code: \path{sandbox/} git repo; commits
+\texttt{d9dc1fd} (ws), \texttt{d45651c} (Gate B),
+\texttt{8da94c9} (Gate D), \texttt{489495a} (Gate E),
+\texttt{56c9c62} (Gate D/E READMEs).
+\item Runs: \path{gate_b/run.py}, \path{gate_d/run.py},
+\path{gate_e/run.py} each print a JSON summary into
+\path{results/}; tables/figures are \emph{generated} by
+\path{build_figures_tables.py} (no hand-typed numbers).
+\item Environment: Python \SI{3.12}{} , numpy \SI{2.5}{},
+matplotlib; venv at \path{02\_cl/.venv312/}; `requirements.txt`
+pins versions; the tracking session's canonical battery is read-only
+under \path{surrogate_cl/results/}.
+\item Video: \path{video/pulse\_raster.mp4} (ffmpeg), produced by
+\path{make_video.py}.
+\item Build note: this PDF compiled with MiKTeX
+(`latexmk -pdf`); no Overleaf-only packages.
+\end{itemize}
+
+\bibliographystyle{unsrt}
+\begin{thebibliography}{9}
+\bibitem{kagan2022dishbrain}
+B.~J.~Kagan \emph{et al.}, ``In vitro neurons learn and exhibit
+sentience when embodied in a simulated game-world,'' \emph{Neuron}
+110(22), 3952--3969, 2022.
+\bibitem{balci2023neurons}
+B.~Balc{\i}, N.~Klapproth \emph{et al.}, ``Still no evidence that
+DishBrain neurons exhibit sentience,'' \emph{Neuron} 111(5), 2023.
+\bibitem{millar2025}
+(BL-1 decoder-ablation baseline; \texttt{--decoder-ablation zero}),
+embodied neurocomputation framework preprint, 2026. arXiv:2605.13315.
+\end{thebibliography}
+
+\end{document}
