@@ -56,7 +56,7 @@ def main():
 
     SUBN = 60  # neurons shown per panel (subsample)
     nidx = {"LIF": 0, "Izhikevich": 1, "Poisson (dead null)": 2}
-    fig, axes = plt.subplots(3, 2, figsize=(11, 8.5),
+    fig, axes = plt.subplots(3, 2, figsize=(11, 8),
                              gridspec_kw={"width_ratios": [1, 1]})
     rasters, decodes = axes[:, 0], axes[:, 1]
 
@@ -102,7 +102,11 @@ def main():
     nframes = hubd.N_WIN  # full sweep
     anim = matplotlib.animation.FuncAnimation(fig, frame, frames=nframes,
                                               interval=80, blit=False, repeat=False)
-    writer = FFMpegWriter(fps=12, bitrate=1200, codec="libx264")
+    # Ensure even dimensions (yuv420p requires w,h both even) then encode
+    # H.264 High profile with faststart for web-friendly seeking.
+    writer = FFMpegWriter(fps=12, bitrate=1200, codec="libx264",
+                          extra_args=["-pix_fmt", "yuv420p",
+                                      "-movflags", "faststart"])
     anim.save(OUTMP4, writer=writer, dpi=110)
     plt.close(fig)
     print("WROTE", OUTMP4)
