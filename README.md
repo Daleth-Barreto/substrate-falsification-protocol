@@ -24,11 +24,11 @@ The publication-grade claim that the substrate *computes* is validated in the co
 
 ```
 03_union/
-├── README.md
-├── requirements-bl1.lock.txt     # BL-1 substrate environment (uv freeze)
-├── bl1_venv/                     # isolated JAX(CPU) environment (git-ignored)
-├── vendor/bl1/                   # vendored m9h/bl1 (vendored source + licence)
-└── (src/)                        # substrate adapter (F4, in progress)
++- README.md
++- requirements-bl1.lock.txt     # BL-1 substrate environment (uv freeze)
++- bl1_venv/                     # isolated JAX(CPU) environment (git-ignored)
++- vendor/bl1/                   # vendored m9h/bl1 (vendored source + licence)
++- (src/)                        # substrate adapter (F4, in progress)
 ```
 
 ## Experiments / baselines (tabular for reviewers)
