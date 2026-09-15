@@ -67,6 +67,7 @@ def main():
     gd = load("gate_d/results/gate_d_summary.json")
     gd_raw = load_raw_gated()
     ge = load("gate_e/results/gate_e_summary.json")
+    gcw = load("verify/verify_wr_summary.json")
     canonical = load("../../surrogate_cl/results/task_tracking.json")
 
     # ------------------------------------------------------------------ figure
@@ -168,6 +169,70 @@ def main():
     tab.append("% floor problema: meanpd=" + fmt3(gd["pooled"]["lif"]["meanpd_rmse_mean"]) +
                "  upper-baseline: passthru=" + fmt3(gd["pooled"]["lif"]["passthru_rmse_mean"]))
     write_tab("tab_gated.tex", tab)
+
+    # ---- Tab. 3 — matched marginal histogram statistics (null match quality)
+    rates = np.asarray(gb["calibration"]["poisson_rate"], dtype=np.float64)
+    dt_ms = 0.5  # hub.DT_MS; per-tick rates -> Hz
+    rates_hz = rates / (dt_ms / 1000.0)
+    silent = int(np.sum(rates > 1e-6))
+    tab = []
+    tab.append("% TABLA marginal emparejada: nulos Pois LIF-matched (mean/SD/Fano).")
+    tab.append("% desde gate_b_summary.json calibration.poisson_rate")
+    tab.append("\\begin{tabular}{lrrrr}")
+    tab.append("\\toprule")
+    tab.append("statistic & LIF marginal ($r_i$) & matched IID Poisson & "
+               "$N=2000$ neurons & $\\mathrm{Fano}$ \\\\")
+    tab.append("\\midrule")
+    tab.append("per-neuron mean rate (Hz) & " + fmt3(float(rates_hz.mean())) +
+               " & " + fmt3(float(rates_hz.mean())) + " & both & -- \\\\")
+    tab.append("per-neuron StdDev (Hz) & " + fmt3(float(rates_hz.std())) +
+               " & $\\sqrt{\\mu}$ only & -- & " +
+               fmt3(float(rates_hz.var() / rates_hz.mean())) + " \\\\")
+    tab.append("fraction silent ($r_i=0$) & " +
+               f"{float(1 - silent / len(rates)):.3f}" +
+               " & $e^{-\\mu}$ expected & " + f"{len(rates) - silent}/{len(rates)}"
+               " & -- \\\\")
+    tab.append("\\bottomrule")
+    tab.append("\\end{tabular}")
+    tab.append("% nota: Fano>1 => marginal sobredisperso vs Poisson homogeneo;")
+    tab.append("% la coincidencia es exacta en tasas marginales (no en estructura")
+    tab.append("% temporal), que es lo que hace que el nulo sea 'matched'.")
+    write_tab("tab_hist.tex", tab)
+
+    # ---- Tab. 4 — Gate C: readout-channel ablation (aligned vs randomized wr)
+    tab = []
+    tab.append("% TABLA Gateway C: canal de lectura. RMSE canon bajo wr=g "
+               "(alineado) vs wr aleatorio por-seed; k_ro recalibrado.")
+    tab.append("% desde verify_wr_summary.json (sine+pulse, seeds 1/29/55)")
+    tab.append("\\begin{tabular}{llrrrr}")
+    tab.append("\\toprule")
+    tab.append("profile & substrate & $\\widehat{\\mathrm{RMSE}}_{\\mathrm{aligned}}$ "
+               "& $\\widehat{\\mathrm{RMSE}}_{\\mathrm{random}}$ & $\\Delta$ & "
+               "$p_{\\mathrm{paired}}$ \\\\")
+    tab.append("\\midrule")
+    gcw_per_pr = {}
+    for row_ in gcw["per_profile"]:
+        gcw_per_pr.setdefault(row_["profile"], []).append(row_)
+    for pr in ("sine", "pulse"):
+        rows_pr = gcw_per_pr[pr]
+        for sub in SUBSTRATES:
+            aligned_ = np.array([r_[sub]["aligned"] for r_ in rows_pr])
+            random_ = np.array([r_[sub]["random"] for r_ in rows_pr])
+            d = random_ - aligned_
+            n_pos = int(np.sum(d > 0.0))
+            n_seeds = int(d.size)
+            tab.append(" & ".join([
+                f"\\texttt{{{pr}}}", SUB_LABEL[sub],
+                fmt3(float(aligned_.mean())), fmt3(float(random_.mean())),
+                f"{d.mean():+.3f}", f"{n_pos}/{n_seeds}",
+            ]) + r" \\")
+    tab.append("\\bottomrule")
+    tab.append("\\end{tabular}")
+    tab.append("% p_paired: fraccion de seeds con random>aligned (3 seeds);")
+    tab.append("% LIF e IZH colapsan al piso Poisson bajo wr aleatorio (d>0,")
+    tab.append("% toda seed); Poisson inmune (d=0). La informacion que queda")
+    tab.append("% utilizable solo la recupera el ridge (Gate D).")
+    write_tab("tab_gatec.tex", tab)
 
     # ---- Tab. 3 — Gate E memory: carried per profile, one col per substrate
     tab = []

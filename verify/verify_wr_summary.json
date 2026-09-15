@@ -1,0 +1,125 @@
+{
+  "label": "Gate C readout-channel control (wr alineado vs aleatorio)",
+  "n_seeds_per_profile": 3,
+  "profiles": [
+    "sine",
+    "pulse"
+  ],
+  "notes": "wr_random = N(0,1) reescalado a |wr| igual y centrado, dibujado de forma independiente por seed (rng seed 4242); k_ro re-calibrado por sustrato; RMSE canon bajo el decode fijo.",
+  "per_profile": [
+    {
+      "profile": "sine",
+      "seed": 1,
+      "lif": {
+        "aligned": 0.18151247874654697,
+        "random": 0.40735426842000805,
+        "delta": 0.22584178967346108
+      },
+      "izh": {
+        "aligned": 0.2323306544690045,
+        "random": 0.39871166810456693,
+        "delta": 0.16638101363556243
+      },
+      "poisson": {
+        "aligned": 0.40735426842000805,
+        "random": 0.40735426842000805,
+        "delta": 0.0
+      }
+    },
+    {
+      "profile": "sine",
+      "seed": 29,
+      "lif": {
+        "aligned": 0.17807314043355454,
+        "random": 0.40735426842000805,
+        "delta": 0.2292811279864535
+      },
+      "izh": {
+        "aligned": 0.23717098169495662,
+        "random": 0.38890816488480595,
+        "delta": 0.15173718318984933
+      },
+      "poisson": {
+        "aligned": 0.40735426842000805,
+        "random": 0.40735426842000805,
+        "delta": 0.0
+      }
+    },
+    {
+      "profile": "sine",
+      "seed": 55,
+      "lif": {
+        "aligned": 0.18998951980201767,
+        "random": 0.40735426842000805,
+        "delta": 0.21736474861799038
+      },
+      "izh": {
+        "aligned": 0.23431663316057402,
+        "random": 0.39892326824513474,
+        "delta": 0.16460663508456072
+      },
+      "poisson": {
+        "aligned": 0.40735426842000805,
+        "random": 0.40735426842000805,
+        "delta": 0.0
+      }
+    },
+    {
+      "profile": "pulse",
+      "seed": 1,
+      "lif": {
+        "aligned": 0.12694279466795688,
+        "random": 0.3966854862482367,
+        "delta": 0.2697426915802798
+      },
+      "izh": {
+        "aligned": 0.31266033050985265,
+        "random": 0.3890795839201591,
+        "delta": 0.07641925341030648
+      },
+      "poisson": {
+        "aligned": 0.3966854862482367,
+        "random": 0.3966854862482367,
+        "delta": 0.0
+      }
+    },
+    {
+      "profile": "pulse",
+      "seed": 29,
+      "lif": {
+        "aligned": 0.12589098898917322,
+        "random": 0.3966854862482367,
+        "delta": 0.27079449725906346
+      },
+      "izh": {
+        "aligned": 0.288144275885704,
+        "random": 0.35954964904850334,
+        "delta": 0.07140537316279932
+      },
+      "poisson": {
+        "aligned": 0.3966854862482367,
+        "random": 0.3966854862482367,
+        "delta": 0.0
+      }
+    },
+    {
+      "profile": "pulse",
+      "seed": 55,
+      "lif": {
+        "aligned": 0.11912888628323313,
+        "random": 0.3966854862482367,
+        "delta": 0.27755659996500354
+      },
+      "izh": {
+        "aligned": 0.28747332982316415,
+        "random": 0.33335444648260826,
+        "delta": 0.04588111665944411
+      },
+      "poisson": {
+        "aligned": 0.3966854862482367,
+        "random": 0.3966854862482367,
+        "delta": 0.0
+      }
+    }
+  ]
+}

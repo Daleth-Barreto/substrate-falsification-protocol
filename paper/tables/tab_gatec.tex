@@ -1,0 +1,18 @@
+% TABLA Gateway C: canal de lectura. RMSE canon bajo wr=g (alineado) vs wr aleatorio por-seed; k_ro recalibrado.
+% desde verify_wr_summary.json (sine+pulse, seeds 1/29/55)
+\begin{tabular}{llrrrr}
+\toprule
+profile & substrate & $\widehat{\mathrm{RMSE}}_{\mathrm{aligned}}$ & $\widehat{\mathrm{RMSE}}_{\mathrm{random}}$ & $\Delta$ & $p_{\mathrm{paired}}$ \\
+\midrule
+\texttt{sine} & LIF & 0.183 & 0.407 & +0.224 & 3/3 \\
+\texttt{sine} & Izhikevich & 0.235 & 0.396 & +0.161 & 3/3 \\
+\texttt{sine} & Poisson (dead null) & 0.407 & 0.407 & +0.000 & 0/3 \\
+\texttt{pulse} & LIF & 0.124 & 0.397 & +0.273 & 3/3 \\
+\texttt{pulse} & Izhikevich & 0.296 & 0.361 & +0.065 & 3/3 \\
+\texttt{pulse} & Poisson (dead null) & 0.397 & 0.397 & +0.000 & 0/3 \\
+\bottomrule
+\end{tabular}
+% p_paired: fraccion de seeds con random>aligned (3 seeds);
+% LIF e IZH colapsan al piso Poisson bajo wr aleatorio (d>0,
+% toda seed); Poisson inmune (d=0). La informacion que queda
+% utilizable solo la recupera el ridge (Gate D).

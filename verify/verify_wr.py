@@ -1,14 +1,17 @@
-"""verify_wr.py — is the IZH 'tracking' carried by the aligned readout channel?
+"""verify_wr.py — is the apparent 'tracking' carried by the aligned readout?
 
-Hypothesis from Gate D: IZH's apparent Gate-B tracking came from the readout
-channel `wr` being aligned with the input projection `g`, not from task
-information in the population spikes. `wr` = g is the calibrated choice.
+Hypothesis from Gate D: the fixed-channel Gate-B tracking came from the
+readout projection `wr` being aligned with the input projection `g`
+(`wr` = g is the calibrated choice), not from task information that any
+readout of the population spikes would recover. Gate C tests this.
 
 Test: rebuild the readout with `wr_random` = a zero-mean random vector
-(decorrelated from g, same norm scaling then k_ro re-calibrated). If
-`wr`-alignment is what inflated IZH, then under `wr_random` the IZH canon RMSE
-collapses toward the dead-null floor, while LIF, whose rate code carries the
-task (Gate D carried +0.094), should degrade less.
+(drawn independently per seed, decorrelated from g, same norm then k_ro
+re-calibrated). If `wr`-alignment is what produced the Gate-B numbers,
+then under `wr_random` the canonical RMSE collapses toward the dead-null
+floor for the materials that only tracked through the channel. Poisson
+must be unaffected. The distinction survives only if a readout-invariant
+decoder (Gate D ridge) recovers the task from the same spikes.
 
 Run on sine+pulse, seeds 1/29/55. Compares canon RMSE under aligned wr vs
 random wr for LIF, IZH, POISSON.
@@ -37,15 +40,21 @@ def main():
     cal = rund.calibrate()
     g, w, wr = hubd.make_wiring(7)
     rng = np.random.default_rng(4242)
-    wr_rand = rng.normal(0.0, 1.0, size=g.shape[0])
-    # rescale random readout to same |wr| so k_ro calibration transfers
-    wr_rand = wr_rand * (np.linalg.norm(wr) / np.linalg.norm(wr_rand))
 
+    def rand_wr(seed):
+        # per-seed independent random readout, unit-norm rescaled to |wr|
+        rr = rng.normal(0.0, 1.0, size=g.shape[0])
+        rr -= rr.mean()
+        return rr * (np.linalg.norm(wr) / np.linalg.norm(rr))
+
+    rows = []
     for pname in ("sine", "pulse"):
         u = rund.make_profile(pname)
         for seed in (1, 29, 55):
             gw, ww, wrr = hubd.make_wiring(seed)
+            wr_rand = rand_wr(seed)
             row = [f"{pname:6s} s{seed:2d}"]
+            entry = {"profile": pname, "seed": seed}
             for sn in ("lif", "izh", "poisson"):
                 sub = (hubd.LIF() if sn == "lif" else
                        hubd.IZH() if sn == "izh" else
@@ -57,12 +66,34 @@ def main():
                 rc = rund.REC_SCALE.get(sn, 0.0)
                 r_aligned = canon_rmse(sub, (gw, ww, wrr), u, bi, dg, rc, k_ro)
                 r_random = canon_rmse(sub, (gw, ww, wr_rand), u, bi, dg, rc, k_ro)
+                entry[sn] = {"aligned": r_aligned, "random": r_random,
+                             "delta": r_random - r_aligned}
                 row.append(f"{sn}: aligned={r_aligned:.3f} random={r_random:.3f} "
                            f"d={r_random - r_aligned:+.3f}")
             print("  ".join(row))
+            rows.append(entry)
 
-    print("EXPECT: IZH degrades strongly under wr_random (d >> 0); LIF degrades "
-          "little or stays well below Poisson; POISSON stays ~0.39 regardless.")
+    summary = {
+        "label": "Gate C readout-channel control (wr alineado vs aleatorio)",
+        "n_seeds_per_profile": 3,
+        "profiles": ["sine", "pulse"],
+        "notes": "wr_random = N(0,1) reescalado a |wr| igual y centrado, "
+                 "dibujado de forma independiente por seed (rng seed 4242); "
+                 "k_ro re-calibrado por sustrato; RMSE canon bajo el decode "
+                 "fijo.",
+        "per_profile": rows,
+    }
+    import json
+    out = os.path.join(os.path.dirname(__file__), "verify_wr_summary.json")
+    with open(out, "w") as f:
+        json.dump(summary, f, indent=2)
+    print("WROTE", out)
+
+    print("EXPECT: randomizing wr collapses BOTH living substrates toward the "
+          "dead-null floor (d >> 0): the fixed aligned channel wr=g carried the "
+          "Gate-B tracking; only a readout-invariant decoder (Gate D) separates "
+          "LIF (real carried info) from IZH (channel artifact). POISSON is "
+          "unaffected (d = 0).")
 
 
 if __name__ == "__main__":

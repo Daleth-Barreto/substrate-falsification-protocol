@@ -1,0 +1,14 @@
+% TABLA marginal emparejada: nulos Pois LIF-matched (mean/SD/Fano).
+% desde gate_b_summary.json calibration.poisson_rate
+\begin{tabular}{lrrrr}
+\toprule
+statistic & LIF marginal ($r_i$) & matched IID Poisson & $N=2000$ neurons & $\mathrm{Fano}$ \\
+\midrule
+per-neuron mean rate (Hz) & 8.091 & 8.091 & both & -- \\
+per-neuron StdDev (Hz) & 15.296 & $\sqrt{\mu}$ only & -- & 28.916 \\
+fraction silent ($r_i=0$) & 0.740 & $e^{-\mu}$ expected & 1480/2000 & -- \\
+\bottomrule
+\end{tabular}
+% nota: Fano>1 => marginal sobredisperso vs Poisson homogeneo;
+% la coincidencia es exacta en tasas marginales (no en estructura
+% temporal), que es lo que hace que el nulo sea 'matched'.
