@@ -38,17 +38,17 @@ MuJoCo
 
 ```
 01_snn/
-├── src/
-│   ├── deploy12.py        # Deploy12 G1 loader (LSTM + PD), unitree_rl_gym deployment
-│   ├── mujco_env.py       # MuJoCo environment wrapper (menagerie MJCF), perturb, reset
-│   ├── ann_checkpoint.py  # ANN checkpoint loading and conversion entry points
-│   ├── convert.py         # ANN-to-SNN conversion (NEF: max+scale, ELU-to-LIF ensembles)
-│   ├── spiking_pid.py     # 1 kHz spiking inner loop
-│   └── run_eval.py        # runner: PD baseline vs spiking stack
-├── scripts/               # diagnostics, probes, ONNX export, figures
-├── exported/              # converted/exported checkpoints and datasets (committed, small)
-├── results/               # summary.json, figures, videos
-└── README.md
++- src/
+|  +- deploy12.py        # Deploy12 G1 loader (LSTM + PD), unitree_rl_gym deployment
+|  +- mujco_env.py       # MuJoCo environment wrapper (menagerie MJCF), perturb, reset
+|  +- ann_checkpoint.py  # ANN checkpoint loading and conversion entry points
+|  +- convert.py         # ANN-to-SNN conversion (NEF: max+scale, ELU-to-LIF ensembles)
+|  +- spiking_pid.py     # 1 kHz spiking inner loop
+|  +- run_eval.py        # runner: PD baseline vs spiking stack
++- scripts/              # diagnostics, probes, ONNX export, figures
++- exported/             # converted/exported checkpoints and datasets (committed, small)
++- results/              # summary.json, figures, videos
++- README.md
 ```
 
 ## Experiments / metrics
@@ -57,7 +57,7 @@ MuJoCo
 |---|---|---|
 | F1-E1 | velocity command 0 -> 2.5 m/s on flat ground (H1 and G1) | mean/max velocity, distance 30 m, falls |
 | F1-E2 | perturbation recovery (50-100 N push) | distance after push, stabilisation time |
-| F1-E3 | robustness: sensor noise, 5° slope | falls per episode |
+| F1-E3 | robustness: sensor noise, 5 deg slope | falls per episode |
 | F1-E4 | energetic cost of the spiking stack | spikes/tick, estimated energy per step |
 
 Baselines: pure PD (ANN targets, classic PD), original ANN policy, converted SNN.
