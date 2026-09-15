@@ -21,3 +21,5 @@ checkpoints/
 *.pkl
 !results/
 !results/*.json
+
+*_log.txt
