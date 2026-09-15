@@ -1,139 +1,115 @@
-# Fase 2 — Cortical Labs Contract: bucle cerrado
+# F2 - Cortical Labs contract: closed loop
 
-**Pregunta:** ¿puede un bucle de control escrito contra el **contrato del CL API** de Cortical Labs (librería oficial `cl-sdk`, gratis, local) controlar un humanoide simulado usando un **sustrato espiking in-silico** que imita el papel de un DishBrain/CL1, respetando latencias de tiempo real?
+**Question:** can a control loop written against the **Cortical Labs API contract** (official `cl-sdk`, free, local) drive a simulated humanoid with an **in-silico spiking substrate** that plays the role of a DishBrain / CL1, within real-time constraints?
 
-## Contexto CL (verificado, sep 2026)
+## CL context (verified, September 2026)
 
-- **CL API** (arXiv:2602.11632): contrato formal de timing/orden/sincronización; round-trip sub-ms; `Neurons.loop()` hasta 25 kHz; `stim()` transaccional.
-- **`cl-sdk`** (PyPI, **gratis**, CC BY-NC): emula el contrato localmente. ⚠️ **No simula biología** (spikes Poisson / replay HDF5, "does not respond to stimulation"). La vía oficial para enchufar un sustrato real: **`cl.sim.set_simulator_data_source()`** con `LiveSimulatorDataSource` → `sink.emit_frames()` y callback **`on_stim(stim)`**.
-- Sustrato in-silico candidato: **BL-1** (JAX, 10k Izhikevich + STDP + virtual MEA 64ch, habla el UDP del CL1) o **Nengo/NEF** (más simple, CPU).
-- Sin hardware: CL1 = $35k + ética; Cloud = ~$300/sem. **Esta fase NO los necesita.**
+- **CL API** (arXiv:2602.11632): a formal contract for timing, ordering and synchronisation; sub-millisecond round trips; `Neurons.loop()` up to 25 kHz; transactional `stim()`.
+- **`cl-sdk`** (PyPI, free, CC BY-NC): emulates the contract locally. It does **not** simulate biology (Poisson / HDF5 spikes, "does not respond to stimulation"). The official path to plug in a real substrate is a custom simulator data source (`cl.sim.set_simulator_data_source()`).
+- Candidate in-silico substrates: **BL-1** (JAX, 10k Izhikevich + STDP, virtual 64-channel MEA, speaks the CL1 UDP protocol) or **Nengo/NEF** (simpler, CPU).
+- No hardware: CL1 is USD 35k + ethics; Cloud is about USD 300/week. **This phase needs neither.**
 
-## Qué demostrar
+## What is demonstrated
 
-1. El **contrato CL** puede ser el scheduler del lazo de un humanoide (1 kHz) sin romper la dinámica.
-2. El sustrato espiking in-silico produce spikes coherentes (no Poisson) conectado al contrato.
-3. Un aprendizaje simple de tipo DishBrain (reward por predictibilidad / STDP) es posible en ese bucle sobre H1→G1.
-4. Mismo código → real CL1/Cloud como *upgrade path* (narrativa del paper, no experimento aquí).
+1. The **CL contract** can schedule a humanoid loop without breaking the dynamics.
+2. The in-silico spiking substrate produces coherent (non-Poisson) spikes connected to the contract.
+3. A simple DishBrain-style learning (predictability reward / STDP) is possible in this loop.
+4. The same code is an *upgrade path* to a real CL1 / Cloud (narrative, not an experiment here).
 
-## Arquitectura target
-
-```
-MuJoCo (H1/G1) ──(estado)──► codificador (rate/time-to-first-spike)
-                                  │ stim()  ▼
-   cl-sdk Neurons.loop(1000 Hz)  ◄──►  Sustrato in-silico (BL-1 o Nengo)
-        │ on_stim() callback              │
-        ▼                                  └─ spikes
-   decodificador (spikes→acciones) ──► MuJoCo
-   DataStream: (x,vel,joints)+reloj ──► HDF5 (RecordingView)
-```
-
-## Stack (requiere **Python 3.12+**, instalado vía `uv`)
-
-- `cl-sdk` (PyPI, local, CC BY-NC — vía oficial: `cl.sim.set_simulator_data_source()`)
-- `mujoco 3.13` + MJCF G1 (Unitree RL Gym)
-- `nengo 4.1` (CPU) — hub de decisión + spikes sintéticos en el datasource
-- `torch 2.14+cpu` (solo para `deploy12` en el subproceso)
-- Python 3.12.13 standalone instalado vía `uv python install 3.12` (winget/python.org hangs en este HW)
-
-**venv**: `.venv312` con `mujoco==3.13.0, nengo==4.1.0, torch==2.14.0+cpu, cl-sdk`.
-
-## Estructura del repo (propuesta)
+## Target architecture
 
 ```
-02_cl/
-├── README.md
-├── requirements.txt          # py3.12 venv
-├── src/
-│   ├── contract.py           # Neurons.loop(1000) + record() + DataStream
-│   ├── substrate/            # interfaz agnóstica de sustrato
-│   │   ├── base.py           # on_stim() / produce_spikes()
-│   │   ├── nengo_lif.py      # substrato LIF/NEF
-│   │   └── bl1_jax.py        # substrato BL-1 (Izhikevich+STDP, UDP)
-│   ├── bridge.py             # LiveSimulatorDataSource wrapper
-│   ├── encoder.py / decoder.py
-│   └── mujco_env.py
-├── experiments/
-│   ├── e1_latency.py         # latencia tick→stim→spike medida
-│   ├── e2_closed_loop.py     # H1 sigue comando de velocidad
-│   └── e3_learning.py        # reward-modulated STDP sobre gait
-└── notebooks/
+MuJoCo (H1 / G1) --(state)--> encoder (rate / time-to-first-spike)
+                                  | stim()   v
+ cl-sdk Neurons.loop(1000 Hz) <---> substrate in-silico (BL-1 or Nengo)
+      | on_stim() callback        |
+      v                           - spikes
+ decoder (spikes -> actions) --> MuJoCo
+ DataStream: (x, vel, joints) + clock --> HDF5 (RecordingView)
 ```
 
-## Estado (realizado, sep 2026) — demo de lazo cerrado funcional
+## Stack (requires Python 3.12+, installed with `uv`)
 
-**`src/bridge_g1.py`** implementa un `SimulatorDataSource` custom (G1DataSource) que posee la `Deploy12` dentro del subproceso del simulador CL: codea el estado sensorial en 64 electrodos a 25 kHz (errores de joints `[0:12]`, actitud `[12:15]`, altura `ch23`, vx-override `ch62`, cultivo/hub `ch63`), avanza la física en fronteras de 50 Hz y aplica micro-estimulación en `on_stim` (torque overlay `[0:12]`, vx override `ch62`).
+- `cl-sdk` (PyPI, local, CC BY-NC; data source registered via `set_simulator_data_source("module:factory", config=..., metadata=...)`)
+- `mujoco 3.13` + G1 MJCF (Unitree RL Gym)
+- `nengo 4.1` (CPU) -- decision hub + synthetic spikes in the datasource
+- `torch 2.14+cpu` (only for `deploy12` in the subprocess)
+- Python 3.12.13 standalone via `uv python install 3.12`
 
-**`src/demo_walk.py`** cierra el contrato completo a 40 TPS:
-`walker sensores → electrodos → detección de spikes culturales (spike-sorting propio sobre tick.frames) → hub Nengo LIF (NEF, 1000 neuronas, decide vx) → stims Myo-electric (μA) → on_stim → walker`.
+**venv**: `.venv312` with `mujoco==3.13.0, nengo==4.1.0, torch==2.14.0+cpu, cl-sdk==1.0.0`. Full pins in `requirements.lock.txt`.
 
-Resultado (12 s, reproducible): **h_last=0.772 m, vx_last≈0.50 m/s, fallen=False**, hub cmd≈0.53, 50±5 eventos de stim adaptativos, ~8.8 spikes/tick. Evidencia: `results/f2_demo.json` + `results/f2_demo.png`.
+## Key findings (live cl-sdk API)
 
-### Hallazgos clave (API viva de cl-sdk)
+- This SDK version has no `cl.open` module and no `LiveSimulatorDataSource`; `cl.open()` is a **generator** and the data source registers with `set_simulator_data_source("module:factory", ...)`.
+- `neurons.loop(tps)`: the tick carries `tick.frames` (int16) and `tick.analysis.spikes`. **`analysis.spikes` does not detect synthetic frames** (it only works with replay/Poisson ground truth); the correct path is custom spike sorting over `tick.frames`. The data source can attach `DataSourceBatch(frames=..., spikes=DataSourceSpike(...))` if desired.
+- `Neurons.stim(channel_set, stim_design, ...)` is **positional-only**; float designs become `StimDesign(160 us, -I, 160 us, +I)`; charge limit 3 nC -> 0..~18 uA (we encode 4 uA per m/s). Do not send `cmd ~= 0` (equal polarities raise `ValueError`).
+- Nengo 4.1 `run_steps(N)` costs about 100 ms **per call** (0.256 ms/step at N=400), so the hub runs in a `HubThread` with 1.2 s simulation bursts per call and the loop reads `hub.latest`.
+- **LIF fidelity**: at `dt=0.01` a NEF decodes identity(2.0) as about 0.68 (the substrate degrades); at `dt=0.002` it is about 1.95. The hub uses `dt=0.002, 600 steps/burst`.
+- `read()` is invoked in chunks of 5 samples: transient generation must be by a **global temporal program** (interval proportional to 1/|sensor|), not per chunk, to avoid multiplying density.
+- The datasource subprocess does not guarantee `close()` on exit, so walker telemetry is written from `_ctrl_step` every 25 control steps.
 
-- En esta versión del SDK **no hay modulo `cl.open`**, ni `LiveSimulatorDataSource`/`sink.emit_frames()`: **`cl.open()` es generador** y el datasource se registra con `set_simulator_data_source("modulo:factory", config=..., metadata=...)`.
-- `neurons.loop(tps)`: el tick trae `tick.frames` (int16) y `tick.analysis.spikes`. **`analysis.spikes` NO detecta frames sintéticos** (solo funciona con ground-truth de replay/Poisson); la vía correcta es hacer spike-sorting propio sobre `tick.frames` (que sí reciben los datos del datasource). El datasource, si quiere, puede adjuntar `DataSourceBatch(frames=..., spikes=DataSourceSpike(...))`.
-- `Neurons.stim(channel_set, stim_design, /, ...)` es **posicional-only**. Con float → `StimDesign(160us, −I, 160us, +I)`; límite de carga **3 nC** ⇒ 0..~18 μA (codificamos 4 μA per m/s). No enviar con cmd≈0 (polaridades iguales → ValueError).
-- `run_steps(N)` de Nengo 4.1 cuesta ~100 ms **por llamada** (0.256 ms/step a N=400) ⇒ el hub corre en `HubThread` con ráfagas de 1.2 s por llamada; el lazo real lee `hub.latest`.
-- **Fidelidad LIF**: con `dt=0.01` un NEF decodifica identidad de 2.0 como ~0.68 (el sustrato se degrada); con `dt=0.002` ≈ 1.95 ✓. El hub usa `dt=0.002, 600 pasos/ráfaga`.
-- `read()` se invoca en chunks de 5 muestras: la generación de transitorios debe ser **por programa temporal global** (intervalo ∝ 1/|sensor|), no por chunk, para no multiplicar la densidad.
-- El subproceso del datasource no garantiza `close()` al salir ⇒ la telemétrica del walker se escribe desde `_ctrl_step` cada 25 controles.
+## State: working closed-loop demo
 
-## Ablaciones M3 + latencias M4 (implementadas)
+**`src/bridge_g1.py`** implements a custom simulator data source (G1DataSource) that owns a `Deploy12` inside the CL simulator subprocess: it encodes sensory state into 64 electrodes at 25 kHz (joint errors `[0:12]`, attitude `[12:15]`, height `ch23`, vx-override `ch62`, culture/hub `ch63`), advances the physics at 50 Hz boundaries, and applies microstimulation in `on_stim` (torque overlay `[0:12]`, vx override `ch62`).
 
-**`src/ablate_loop.py`** replica el protocolo doom-neuron sobre nuestro lazo: 4 modos (neural / zero / random / mask0.5) × 12 s, con métricas de latencia por tick (SDK loop) y de `read()` del puente (telemetría `bridge_read`). Evidencia: `results/f2_ablation.json`, `f2_ablation.png`, `f2_ablation_latency.png`.
+**`src/demo_walk.py`** closes the full contract at 40 TPS: `walker -> sensors -> electrodes -> culture spike detection (own spike sorting on tick.frames) -> Nengo-LIF hub (NEF, 1000 neurons, decide vx) -> myo-electric stims (uA) -> on_stim -> walker`.
 
-| modo | mean_cmd | stims | mean_nspk | fallen | vx_last | loop p50/p95 | overruns>25ms | bridge read mean/max |
-|---|---|---|---|---|---|---|---|---|
-| neural | 0.533 | 49 | 8.9 | False | 0.50 | 47/62 ms | 488/499 | 30/172 ms |
-| zero | 0.000 | 0 | 7.1 | False | 0.50 | 47/47 ms | 496/499 | 27/219 ms |
-| random | 0.255 | 481 | 8.6 | False | 0.50 | 47/62 ms | 478/499 | 31/157 ms |
-| mask0.5 (lesión 50%) | 0.479 | 63 | 6.0 | False | 0.50 | 47/63 ms | 499/499 | 32/141 ms |
+Result (12 s, reproducible): **h_last = 0.772 m, vx_last about 0.50 m/s, fallen = False**, hub cmd about 0.53, 50 +/- 5 adaptive stim events, about 8.8 spikes/tick. Evidence: `results/f2_demo.json` + `results/f2_demo.png`.
 
-### v2 — canal vx realmente conectado a la planta (bug reparado)
+## Ablations (doom-neuron protocol) and latency
 
-Auditoría post-M3 (`surrogate_cl`) reveló que en v1 el override de vx **nunca llegaba a la planta**: `cmd_override` solo se reflectaba al frame del canal 62 (lo que "ve" el sustrato) pero no a `deploy12.cmd[0]` (lo que observa la LSTM), por lo que **la trayectoria física era idéntica entre modos** (vx=0.50 en todos — un artefacto). El fix conecta el comando en `_ctrl_step` y se regeneró todo como `results/f2_ablation_v2.*` (los archivos v1 se conservan intactos).
+**`src/ablate_loop.py`** replicates the doom-neuron protocol on this loop: 4 modes (neural / zero / random / mask0.5) x 12 s, with per-tick latency metrics for the SDK loop and the bridge `read()`.
 
-| modo | mean_cmd | stims | mean_nspk | fallen | vx_last | loop p50/p95 | overruns>25ms | bridge read mean/max |
+### v1 and the discovered bug
+
+An audit (in the surrogate line) showed that in v1 the vx override **never reached the plant**: `cmd_override` only re-encoded to the channel-62 frame (what the substrate sees) but not to `deploy12.cmd[0]` (what the LSTM observes), so the physical trajectory was identical across modes (vx = 0.50 everywhere, an artefact). The fix connects the command in `_ctrl_step`; everything was regenerated as `results/f2_ablation_v2.*`. The v1 files stay intact for transparency. **Only v2 is valid for velocity-modulation claims.**
+
+### v2 (corrected loop), mean over 12 s
+
+| mode | mean_cmd | stims | mean_nspk | fallen | vx_last | loop p50/p95 | overruns>25ms | bridge_read mean/max |
 |---|---|---|---|---|---|---|---|---|
 | neural | 0.531 | 70 | 9.1 | False | **0.55** | 31/31 ms | 296/499 | 14/78 ms |
 | zero | 0.000 | 0 | 7.1 | False | 0.50 | 31/32 ms | 292/499 | 16/94 ms |
 | random | 0.255 | 481 | 8.9 | False | **0.28** | 31/32 ms | 292/499 | 16/63 ms |
-| mask0.5 (lesión 50%) | 0.482 | 94 | 6.3 | False | 0.50 | 31/32 ms | 292/499 | 17/79 ms |
+| mask0.5 (50 % lesion) | 0.482 | 94 | 6.3 | False | 0.50 | 31/32 ms | 292/499 | 17/79 ms |
 
-**Lectura v2 (revisada):**
-- Con el lazo funcionando, el comando decodificado **sí modula la velocidad real**: neural camina a 0.55 m/s, random (comando medio 0.255) a 0.28 m/s, zero/mask conservan el default 0.50 m/s. El lazo ya es un *controlador de velocidad* observable, no decorativo.
-- En terreno plano y 0.5 m/s **ninguno cae** (redundancia de estabilidad se mantiene, ahora con causa correcta: la política base absorbe la modulación de velocidad dentro de su sobre), igual que doom-neuron.
-- Cadencia M4 medida aquí: tick p50≈31 ms, p95≈31–32 ms, overruns ≈292/499 (>25 ms) — reportar en wall-clock. `bridge_read`: mean 14–17 µs, cola 63–94 ms.
-- **Ojo historial**: los números v1 (`f2_ablation.json`) tienen el bug; solo v2 es válido para afirmaciones de modulación de velocidad. La M3 "redunda en plano" se conserva, ahora correctamente fundamentada.
+Reading (v2, revisited):
 
-**Lectura honesta (importante para el paper):**
-- El lazo es **redundante en terreno plano a 0.5 m/s**: los 4 modos caminan igual (h=0.772, vx=0.50). La base G1 (PD+LSTM) absorbe la modulación — el mismo hallazgo que doom-neuron ("el decoder tiende a volverse policy head; las ablaciones aún juegan"). Esto es exactamente por qué la M3 es metodológicamente fuerte y por qué F3 necesita **perturbaciones/terreno irregular/cambios de velocidad** para que el lazo sea portante.
-- Las métricas del lazo sí se diferencian (stims 0/49/481, nspk 6.0→8.9): el protocolo distingue modos, lo que respalda el claim de medición.
-- **Cadencia (M4)**: tick real ~47 ms (p50), **no cumple el deadline de 25 ms** (overruns ~488/499). Causas: overhead del lazo + competición GIL con `HubThread` + bursts de física. Reportar siempre en wall-clock (el jitter del CL1 real lanza `TimeoutError`, no se simula). `bridge_read`: chunks de 5 muestras (67499 calls / 337495 samp en 12.5 s), mean 26–32 µs, tail 141–219 ms (bloque de física 50 Hz).
+- With the loop actually closed, the decoded command does modulate physical velocity: neural walks at 0.55 m/s, the uncoupled decoder (mean command 0.255) at 0.28 m/s, zero/mask keep the default 0.50 m/s. The loop is now an observable velocity controller, not decoration.
+- On flat ground at 0.5 m/s none of the modes fall (the stability redundancy persists, now with the correct cause: the base policy absorbs velocity modulation inside its envelope), exactly as in the doom-neuron result.
+- Cadence measured here: tick p50 about 31 ms, p95 31-32 ms, overruns about 292/499 (>25 ms), reported in wall-clock. `bridge_read`: mean 14-17 us, tail 63-94 ms.
 
-## Experimentos / métricas
+Honest reading (important for the paper):
 
-| ID | Experimento | Métrica |
+- The loop is **redundant on flat ground at 0.5 m/s**: all four modes walk alike (h = 0.772, vx = 0.50). The G1 base (PD + LSTM) absorbs the modulation. This is why the load-bearing task experiment (surrogate line) uses velocity *profiles* and information-theoretic separators rather than stability alone.
+- The loop metrics do separate modes (stims 0/49/481, nspk 6.0 -> 8.9), which supports the measurement claim.
+- Cadence: the real tick is about 47 ms (p50) in the loaded runs, above the 25 ms control deadline (overruns about 488/499); causes: loop overhead + GIL contention with the HubThread + physics bursts. Report in wall-clock; a real CL1 lapses raise `TimeoutError`. `bridge_read`: chunks of 5 samples (67,499 calls / 337,495 samples in 12.5 s), mean 26-32 us, tail 141-219 ms (50 Hz physics block).
+
+## Experiments / metrics
+
+| ID | experiment | metric |
 |---|---|---|
-| F2-E1 | Latencia por tick (`Neurons.loop` 1 kHz) | time budget, jitter, round-trip medido |
-| F2-E2 | Lazo cerrado CL-contract: H1 sigue cmd de velocidad | tracking error, estabilidad |
-| F2-E3 | Aprendizaje tipo DishBrain (selección de gait, velocidad objetivo) | muestra de convergencia, spikes/acciones |
-| F2-E4 | Sustrato BL-1 vs Poisson (control negativo) | divergencia de comportamiento |
+| F2-E1 | per-tick latency (`Neurons.loop` 1 kHz) | time budget, jitter, round trip |
+| F2-E2 | closed-loop CL-contract: follow velocity command | tracking error, stability |
+| F2-E3 | DishBrain-style learning (gait selection, target velocity) | convergence sample, spikes/actions |
+| F2-E4 | BL-1 substrate vs Poisson (negative control) | behavioural divergence |
 
-## Entregables F2
+## Deliverables
 
-- [x] `bridge_g1.py` operativo (cl-sdk ↔ walker MuJoCo)
-- [x] Demo reproducible de lazo cerrado (12 s, walker camina) + `f2_demo.json/png`
-- [x] **Ablaciones M3** (neural/zero/random/mask0.5, protocolo doom-neuron) + **latencias M4** (`f2_ablation.json/png`)
-- [ ] Sustrato BL-1 en contrato (UDP) — pendiente/opcional
-- [ ] Reporte de latencias vs presupuesto de control (argumento central) — pendiente (latencias ya medidas en `f2_ablation.json`; falta análisis vs budget 25 ms en paper)
+- [x] `bridge_g1.py` working (cl-sdk <-> MuJoCo walker)
+- [x] Reproducible closed-loop demo (12 s, walker walks) + `f2_demo.json/png`
+- [x] M3 ablations (neural/zero/random/mask0.5) + M4 latency (`f2_ablation*.json/png`)
+- [ ] BL-1 substrate in contract -- in progress (see `03_union` and the surrogate Gate B)
+- [ ] Latency report vs the 25 ms control budget in the paper (latency already measured)
 
-## Publicación candidata
+## Reproducibility
 
-- Workshop **ICRA "Neuromorphic Field Robotics"** (NFR, activo desde 2026) o journal de biocomputing (Cyborg & Bionic / Frontiers) — primero-pero-a-escala trae la validación de tiempos reales del CL-contract en dinámica dinámica.
+Environment and pins: see the project-level `docs/REPRODUCIBILITY.md` and `requirements.lock.txt`. Third-party assets (G1 model, menagerie MJCF, `unitree_rl_gym` deployment with `motion.pt`) are fetched by the project bootstrap script.
 
-## Notas / ética
+## Publication route
 
-- Todo es **simulación**: no se cultivan células, no se compra CL1. Licencia CC BY-NC del SDK = uso académico correcto.
-- El paper debe ser honesto: el SDK aporta el contrato; la "biología" es el sustrato espiking simulado.
+ICRA "Neuromorphic Field Robotics" workshop (active since 2026) or a biocomputing journal (Cyborg and Bionic Systems / Frontiers), first-but-at-scale real-time validation of the CL contract in closed-loop dynamics.
+
+## Notes / ethics
+
+Everything is **simulation**: no cells are cultivated, no CL1 is purchased. The CC BY-NC SDK license is correct for academic use. The paper is honest: the SDK provides the contract; the "biology" is the simulated spiking substrate.
