@@ -1,0 +1,16 @@
+% TABLA Gateway D: reader desenchufado (MISMAS spikes, decodificadores)
+% desde gate_d_summary.json (pooled 5 perfiles x 6 seeds)
+\begin{tabular}{llrrrrr}
+\toprule
+substrate & decoder & $\widehat{\mathrm{RMSE}}$ & $\Delta\mathrm{RMSE}_{\mathrm{floor}}$ & $\mathrm{MI}\,\mathrm{(nats)}$ & $\rho$ & $\mathrm{MI}_{\mathrm{sig}}$ \\
+\midrule
+LIF & fixed calibrated channel & 0.168 & -0.018 & 0.651 & 0.765 & 0.800 \\
+LIF & ridge (cross-validated) & 0.055 & 0.094 & 0.391 & 0.733 & 0.800 \\
+Izhikevich & fixed calibrated channel & 0.239 & -0.090 & 0.385 & 0.633 & 0.800 \\
+Izhikevich & ridge (cross-validated) & 0.157 & -0.008 & 0.250 & 0.458 & 0.767 \\
+Poisson (dead null) & fixed calibrated channel & 0.392 & -0.243 & 0.000 & -0.000 & 0.000 \\
+Poisson (dead null) & ridge (cross-validated) & 0.158 & -0.009 & 0.018 & 0.038 & 0.033 \\
+\bottomrule
+\end{tabular}
+% $\Delta\mathrm{RMSE}_{\mathrm{floor}}$ = RMSE_floor - RMSE
+% (mean-predictor floor, no information baseline; passthru ceiling=0.000)
