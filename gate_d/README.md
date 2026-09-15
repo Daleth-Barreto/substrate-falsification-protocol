@@ -78,9 +78,11 @@ Traces: `results/gate_d_summary.json`, `results/gate_d.png`,
   carries task information (Δcarried +0.103 vs null) while the dead null and a
   poorly-informative substrate do not, and that a fixed readout can both
   inflate (IZH) and mask (LIF vs ridge) the substrate's information.
-- **Follow-up (Gate E)** must test a task that REQUIRES memory: if the dead
-  null fails hard and LIF/IZH track, the memory argument separates substrates
-  functionally. Otherwise the mini is only a decoder-diagnostic.
+- **Follow-up (Gate E)** tested a task that REQUIRES memory: the dead null
+  stays dead, but the neural substrates also do NOT transpose past input into
+  present spikes and a trivial input-FIR dominates. Result NEGATIVE (see
+  gate_e/README.md): the mini cannot demonstrate functional substrate memory;
+  that claim, if made at all, must live in the closed-loop canonical battery.
 
 ## Running
 
