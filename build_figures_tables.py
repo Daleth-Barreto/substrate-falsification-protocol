@@ -147,27 +147,30 @@ def main():
     tab = []
     tab.append("% TABLA Gateway D: reader desenchufado (MISMAS spikes, decodificadores)")
     tab.append("% desde gate_d_summary.json (pooled 5 perfiles x 6 seeds)")
-    tab.append("\\begin{tabular}{llrrrrrr}")
+    tab.append("\\begin{tabular}{llrrrrr}")
     tab.append("\\toprule")
-    tab.append("substrate & decoder & $\\widehat{\\mathrm{RMSE}}$ & $\\mathrm{MI}$ "
-               "& $\\rho$ & $\\mathrm{TE}$ & carried & $\\mathrm{MI}_{\\mathrm{sig}}$ \\\\")
+    tab.append("substrate & decoder & $\\widehat{\\mathrm{RMSE}}$ & "
+               "$\\Delta\\mathrm{RMSE}_{\\mathrm{floor}}$ & $\\mathrm{MI}\\,"
+               "\\mathrm{(nats)}$ & $\\rho$ & $\\mathrm{MI}_{\\mathrm{sig}}$ \\\\")
     tab.append("\\midrule")
     for sub in SUBSTRATES:
         p = gd["pooled"][sub]
+        floor_d_canon = p["meanpd_rmse_mean"] - p["canon_rmse_mean"]
         tab.append(" & ".join([
-            SUB_LABEL[sub], "canonical",
-            fmt3(p["canon_rmse_mean"]), fmt3(p["canon_mi_mean"]), fmt3(p["canon_rho_mean"]),
-            f"{p['canon_te_mean']:.0e}", "--", fmt3(p["canon_mi_sig_frac"]),
+            SUB_LABEL[sub], "fixed calibrated channel",
+            fmt3(p["canon_rmse_mean"]), fmt3(floor_d_canon), fmt3(p["canon_mi_mean"]),
+            fmt3(p["canon_rho_mean"]), fmt3(p["canon_mi_sig_frac"]),
         ]) + r" \\")
         tab.append(" & ".join([
-            SUB_LABEL[sub], "ridge (opt. lin.)",
-            fmt3(p["ridge_rmse_mean"]), fmt3(p["ridge_mi_mean"]), fmt3(p["ridge_rho_mean"]),
-            "--", fmt3(p["carried_info"]), fmt3(p["ridge_mi_sig_frac"]),
+            SUB_LABEL[sub], "ridge (cross-validated)",
+            fmt3(p["ridge_rmse_mean"]), fmt3(p["carried_info"]), fmt3(p["ridge_mi_mean"]),
+            fmt3(p["ridge_rho_mean"]), fmt3(p["ridge_mi_sig_frac"]),
         ]) + r" \\")
     tab.append("\\bottomrule")
     tab.append("\\end{tabular}")
-    tab.append("% floor problema: meanpd=" + fmt3(gd["pooled"]["lif"]["meanpd_rmse_mean"]) +
-               "  upper-baseline: passthru=" + fmt3(gd["pooled"]["lif"]["passthru_rmse_mean"]))
+    tab.append("% $\\Delta\\mathrm{RMSE}_{\\mathrm{floor}}$ = RMSE_floor - RMSE")
+    tab.append("% (mean-predictor floor, no information baseline; passthru ceiling="
+               + fmt3(gd["pooled"]["lif"]["passthru_rmse_mean"]) + ")")
     write_tab("tab_gated.tex", tab)
 
     # ---- Tab. 3 — matched marginal histogram statistics (null match quality)
@@ -236,7 +239,7 @@ def main():
 
     # ---- Tab. 3 — Gate E memory: carried per profile, one col per substrate
     tab = []
-    tab.append("% TABLA Gateway E: memoria. carried(best-linear readout) por perfil.")
+    tab.append("% TABLA Gateway E: memoria. delta-RMSE-floor (ridge - mean-predictor) por perfil.")
     tab.append("% desde gate_e_summary.json (6 seeds). input-FIR8 = respuesta del FIR sobre u.")
     tab.append("\\begin{tabular}{lrrrrr}")
     tab.append("\\toprule")

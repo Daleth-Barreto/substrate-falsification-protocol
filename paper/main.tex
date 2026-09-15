@@ -28,6 +28,7 @@
 \newcommand{\RMSE}{\ensuremath{\mathrm{RMSE}}}
 \newcommand{\MI}{\ensuremath{\mathrm{MI}}}
 \newcommand{\TE}{\ensuremath{\mathrm{TE}}}
+\newcommand{\dfloor}{\ensuremath{\Delta\RMSE_{\mathrm{floor}}}}
 \newcommand{\palt}{0.75\,u}          % passthru (no-substrate) reference
 
 \title{\vspace{-1.5em}A falsification protocol for embodied spiking
@@ -56,24 +57,29 @@ calibrated decision map) and run four gates: (B) substrate swap under a
 fixed readout; (C) readout-channel ablation (randomized projection into
 the decision); (D) cross-validated ridge readout of the \emph{same}
 spikes; (E) memory-demanding tasks. The matched dead substrate is
-exactly task-free under every readout ($\MI\approx0$, $\TE=0$,
+task-independent by construction; its empirical measures stay at the
+null floor under every readout ($\MI\approx0$, $\TE=0$,
 $\rho\approx0$, all seeds, all profiles), and randomization leaves it
 at the same floor ($\Delta=0.000$, $0/3$ seeds). The living substrates
 do not uniformly survive: LIF carries the task through a
-cross-validated ridge readout ($\Delta\RMSE=+0.094$ vs.\ the
-mean-predictor floor; $\MI$ significant in $24/30$ runs) whereas the
-apparent Izhikevich tracking seen under the fixed calibrated readout is
-largely a \emph{readout-channel artifact}: randomizing the readout
-projection collapses \emph{both} living substrates to the dead floor
-($3/3$ seeds), and an optimal readout of the same IZH spikes leaves
-carried information at $\approx0$ ($-0.008$). None of the substrates
-shows linearly decodable history in the present-window population state
+cross-validated ridge readout ($\Delta\RMSE_{\mathrm{floor}}=+0.094$
+vs.\ the mean-predictor floor; $\MI$ significant in $24/30$ runs)
+whereas the apparent Izhikevich tracking seen under the fixed
+calibrated readout is largely a \emph{readout-channel artifact}:
+randomizing the readout projection collapses \emph{both} living
+substrates to the dead floor ($3/3$ seeds), and a cross-validated ridge
+readout of the same IZH spikes leaves RMSE essentially at the floor
+($\Delta\RMSE_{\mathrm{floor}}=-0.008$). None of the substrates shows
+linearly decodable history in the present-window population state
 (Gate E negative), so memory claims are not certified here. We
 conclude: (i) matched dead-substrate controls for the \emph{material}
 of a substrate are cheap, decisive, and should precede scoreboard
-comparisons; (ii) readout-invariance is the correct falsification test
-for substrate-carried information; and (iii) open-loop diagnosis cannot
-certify memory, which must be demonstrated in the closed loop.
+comparisons; (ii) readout \emph{robustness} is a stronger falsification
+test than a single scoreboard: task information that remains recoverable
+after randomizing and re-optimizing the readout is evidence carried by
+the substrate activity rather than by the calibrated interface alone;
+and (iii) open-loop diagnosis cannot certify memory, which must be
+demonstrated in the closed loop.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -104,10 +110,14 @@ of the task. Any substrate that cannot beat this null under a fixed
 readout is not falsifiably carrying the task.
 \item \textbf{Readout controls} (Gates C and D). Gate C randomizes the
 readout projection into the fixed decision map; if the apparent tracking
-collapses toward the dead floor, the signal lived in the channel, not
-the spikes. Gate D replaces the hand-tuned readout with a
-cross-validated ridge readout trained on the \emph{same} spikes; only
-information that survives both is substrate-carried.
+collapses toward the dead floor, performance depends on the channel
+alignment. Gate D replaces the hand-tuned readout with a
+cross-validated ridge readout trained on the \emph{same} spikes; task
+information that remains recoverable after \emph{both} controls is
+evidence the substrate activity itself, rather than the calibrated
+interface alone, carries the signal. Throughout we reserve stronger
+language (``invariance'') for what the experiments cannot show, and use
+\emph{readout robustness} for what they do.
 \end{itemize}
 
 Gate E then asks the harder question---whether present-window population
@@ -177,7 +187,7 @@ $\mathcal{N}(0,1/\sqrt{N p_{\mathrm{re}}})$ (variance-normalized so the
 network operates near stability); the readout projection is
 $\mathbf{w}_r=\mathbf{g}$ (channel aligned with the input projection),
 with a per-substrate scale $k_{\mathrm{ro}}$ (below). The decision map
-is the verbatim calibrated one of the reference system
+is the calibrated one of the reference system
 \cite{embodied_neurocomp},
 $\hat{x}=\mathrm{clip}((\theta_{\mathrm{sig}}-0.0615)/0.277,\ 0,\ 0.75)$,
 clamped to $\SI{0.75}{m/s}$. Five control profiles
@@ -244,8 +254,10 @@ $\mathbf{w}^{\mathrm{rand}}_s$, center it, and rescale to
 $\|\mathbf{g}\|$ (RNG seed $4242$). Keep wiring, bias, drive and the
 fixed decision map; only the readout projection changes. If apparent
 tracking under the aligned channel survives randomization, it is
-substrate-independent; if it collapses to the dead floor, the aligned
-channel carried it.
+substrate-independent; if it collapses to the dead floor, the apparent
+tracking depended on the readout alignment (whether the substrate
+activity \emph{also} contains readout-recoverable task information is
+asked separately by Gate D).
 
 \subsection{Decoders (Gate D)}\label{sec:decoders}
 
@@ -265,9 +277,14 @@ solved via the Woodbury identity and verified against a direct solve
 \item \textbf{passthru}--$\palt$ directly ($\RMSE=0$ by construction,
 the no-substrate ceiling).
 \end{enumerate}
-``carried info'' $=$ $\RMSE_{\mathrm{meanpd}}-\RMSE_{\mathrm{ridge}}$
-(taking the mean-predictor as the zero-information baseline; positive
-values mean the spikes beat a constant).
+We report the \emph{RMSE improvement over the mean-predictor floor},
+\[
+\dfloor = \RMSE_{\mathrm{meanpd}}-\RMSE_{\mathrm{ridge}},
+\]
+taking the constant predictor as the zero-information baseline:
+positive values mean the spikes beat a constant. We deliberately avoid
+an information-unit name for $\dfloor$ because $-\RMSE$ is a loss, not
+an entropy; the reader should not read it as a bit or nat quantity.
 
 \subsection{Information metrics}\label{sec:metrics}
 
@@ -293,13 +310,64 @@ means, and we flag seed-level counts rather than inflating $n$. This
 follows standard pseudo-replication guidance \cite{hurlbert1984}: the
 $200$ windows within a run are not independent evidence.
 
+\noindent
+\textbf{Experimental design at a glance.}
+\begin{table}[H]
+\centering
+\caption{The four gates: what is changed, what is held fixed, and the
+question each gate answers.}
+\label{tab:design}
+\small
+\begin{tabular}{@{}p{5.5em}p{12em}p{11.5em}p{16em}@{}}
+\toprule
+\textbf{Gate} & \textbf{Manipulation} & \textbf{Held fixed} &
+\textbf{Question} \\
+\midrule
+B (substrate
+swap) & dynamics $\to$ Poisson
+null with matched marginals
+& wiring, bias, drive,
+readout $\mathbf{w}_r=\mathbf{g}$, decision map
+& Does a task-independent
+dead substrate reproduce
+the score? \\
+C (channel
+ablation) & readout projection
+$\to$ per-seed random $\mathbf{w}_r^{\mathrm{rand}}$
+& wiring, drive, spikes,
+decision map
+& Does the apparent tracking
+survive breaking the aligned
+channel? \\
+D (readout
+re-learn) & decoder $\to$ cross-validated ridge on
+the \emph{same} spikes
+& spikes, task
+& Do the spike trains themselves
+contain readout-recoverable task
+information? \\
+E (memory) & task $\to$ history-dependent
+(\texttt{lag}, \texttt{integ},
+\texttt{stair}); decoder on
+present-window state
+& spikes, dynamics, readout
+& Is task \emph{history} linearly
+decodable from the present
+population state? \\
+\bottomrule
+\end{tabular}
+\end{table}
+Gates B--D decompose one score into (substrate material) vs.\
+(interface); Gate E sets the bar any memory claim must clear. All four
+are run on the \emph{same} hub, seeds and profiles.
+
 \section{Results}\label{sec:results}
 
 \subsection{Gate B: substrate swap under a fixed readout}\label{sec:gateb}
 \begin{table}[H]
 \centering
-\caption{Gate B: per-profile $\widehat{\RMSE}$, $\MI$, $\rho$ and
-$\TE$-significance under the fixed calibrated readout (5 profiles,
+\caption{Gate B: per-profile $\widehat{\RMSE}$, $\MI$ (nats), $\rho$
+and $\TE$-significance under the fixed calibrated readout (5 profiles,
 6 seeds). ``msd'' is the across-seed mean.}
 \label{tab:gateb}
 \input{tables/tab_gateb.tex}
@@ -324,21 +392,26 @@ fraction of seeds with $d>0$. Both living substrates collapse
 \input{tables/tab_gatec.tex}
 \end{table}
 Randomizing the readout projection collapses \emph{both} living
-substrates to the dead floor: mean $\RMSE$ jumps from $0.12$---$0.24$
-(aligned) to $0.36$---$0.41$ (randomized), in $3/3$ seeds per profile
-(Table~\ref{tab:gatec}). The matched dead null is completely
-unaffected ($\Delta=0.000$, $0/3$ seeds). The aligned channel
-$\mathbf{w}_r=\mathbf{g}$, not the substrate material, held the Gate~B
-signal. This is the direct falsification of ``the substrate computed
-it'' under a hand-tuned readout.
+substrates toward the dead floor: mean $\RMSE$ jumps from $0.12$---$0.24$
+(aligned) to $0.36$---$0.41$ (randomized), in all three evaluated seeds
+per profile (Table~\ref{tab:gatec}). The matched dead null is
+unaffected ($\Delta=0.000$, $0/3$ seeds). Gate C therefore shows that
+performance under the fixed decision map \emph{depends critically on
+the alignment of the readout projection} with the input projection.
+It does not by itself say the substrate is empty: a poor channel could
+also fail to expose genuinely present substrate information. Gate D
+settles that direction---whether the underlying spike trains retain
+readout-recoverable task information---by re-learning the readout on the
+same spikes.
 
 \subsection{Gate D: a readout-invariant answer}\label{sec:gatedres}
 \begin{table}[H]
 \centering
 \caption{Gate D: same spikes, decoder sweep (pooled 5 profiles
-$\times$ 6 seeds). ``carried'' $=$ $\RMSE_{\mathrm{meanpd}}-
-\RMSE_{\mathrm{ridge}}$; $\MI_{\mathrm{sig}}$ is the fraction of runs
-with significant $\MI$.}
+$\times$ 6 seeds). $\dfloor=$ $\RMSE_{\mathrm{meanpd}}-
+\RMSE_{\mathrm{decoder}}$ is the RMSE improvement over the
+mean-predictor (no-information) floor; $\MI$ in nats;
+$\MI_{\mathrm{sig}}$ is the fraction of runs with significant $\MI$.}
 \label{tab:gated}
 \input{tables/tab_gated.tex}
 \end{table}
@@ -347,26 +420,28 @@ Table~\ref{tab:gated}: a cross-validated ridge readout of
 \begin{itemize}[nosep]
 \item \textbf{LIF}: $\RMSE$ drops to $0.055$---the fixed channel had
 left information on the table (canon-to-ridge gap $+0.113$)---and the
-spikes genuinely carry the task: carried $+0.094$, $\MI$ significant in
+spikes genuinely carry the task: $\dfloor=+0.094$, $\MI$ significant in
 $24/30$ runs.
 \item \textbf{Izhikevich}: the fixed-channel ``tracking'' does
-\emph{not} persist: ridge collapses to $0.157$, carried $\approx0$
+\emph{not} persist: ridge collapses to $0.157$, $\dfloor\approx0$
 ($-0.008$), $\MI$ significant in $23/30$ runs but at about a quarter
 of the LIF rate. The Gate~B IZH gap was a readout-channel artifact
 (confirmed by Gate~C).
 \item \textbf{Dead null}: ridge $0.158\approx$ floor, $\MI\approx0$
-(frac.\ $0.03$), $\TE=0$ exactly---the matched null survives the
-optimal linear decoder \cite{hoerl1970,paninski2004}.
+(frac.\ $0.03$), $\TE=0$---the matched null remains at the floor under
+the cross-validated ridge readout \cite{hoerl1970,paninski2004}.
 \end{itemize}
 Recurrence ablation (nohub: $w$ ignored) leaves canon $\RMSE$ unchanged
-to $<0.001$; the hub is effectively feed-forward, so none of the above
-is a memory effect.
+to $<0.001$; the tested recurrence contributes negligibly to the
+measured canonical $\RMSE$, so none of the above is a recurrence
+artefact.
 
 \subsection{Gate E: is there memory?}\label{sec:gateeres}
 \begin{table}[H]
 \centering
-\caption{Gate E: carried info (best linear readout minus floor) per
-profile, plus the input-only 8-tap FIR reference.}
+\caption{Gate E: RMSE improvement over the mean-predictor floor,
+$\dfloor$\ (ridge minus floor), per profile, plus the input-only
+8-tap FIR reference (positive \emph{floor} values).}
 \label{tab:gatee}
 \input{tables/tab_gatee.tex}
 \end{table}
@@ -374,7 +449,7 @@ Negative result. Three history-dependent tasks (\texttt{lag}:
 4-window delayed reference; \texttt{integ}: running integral over
 $8$ windows; \texttt{stair}: staircase-level switch) decoded by the
 ridge on present-window spikes vs.\ an $8$-tap FIR over the input only.
-Carried values are negative for every substrate
+$\dfloor$ is negative for every substrate
 (LIF $-0.13$, IZH $-0.06$, null $-0.006$), while the input-FIR solves
 the linearly recoverable ones ($+0.15$). Conclusion: no substrate shows
 \emph{linearly decodable task history} in the present-window population
@@ -414,27 +489,28 @@ generator) and it should precede scoreboard comparisons in the
 embodied-AI literature \cite{kagan2022dishbrain,balci2023neurons,
 lukosevicius2009}.
 
-\subsection{Readout invariance is the substantive test}\label{sec:disc2}
+\subsection{Readout robustness is the substantive test}\label{sec:disc2}
 
 Gate~C makes the channel visible by breaking it: both living
 substrates collapse when $\mathbf{w}_r$ stops matching $\mathbf{g}$.
 Gate~D then asks whether a readout \emph{trained} on the same spikes
-can recover the task: LIF survives ($+0.094$ carried), IZH does not
-($-0.008$). Readout choice is therefore a substantive modeling
+can recover the task: LIF survives ($\dfloor=+0.094$), IZH does not
+($\dfloor=-0.008$). Readout choice is therefore a substantive modeling
 decision, not a detail. Claims like ``this material computes $\phi$''
 must be re-read as ``this material's spike statistics, \emph{via} some
-channel, can encode $\phi$,'' and the channel must be shown to be
-redundant---or the claim collapses to a statement about the interface,
-exactly the misreading flagged in the DishBrain correspondence
-\cite{balci2023neurons}.
+channel, contain readout-recoverable task-relevant structure,'' and the
+channel must be shown to be redundant---or the claim collapses to a
+statement about the interface, exactly the misreading flagged in the
+DishBrain correspondence \cite{balci2023neurons}.
 
 \subsection{What we are not claiming}\label{sec:disc3}
 
-The hub is feed-forward and open-loop; Gate E is negative, so no
-statement here concerns memory---and none of the numbers is a
-closed-loop result. The neural-vs-null separation in the true
-closed-loop system is reported and owned by the reference framework
-(see \S\ref{sec:repro}); this note's protocol is the \emph{open-loop
+The measured canonical $\RMSE$ is unaffected by dropping the recurrent
+connections (nohub ablation, Gate~D); the tested recurrence contributes
+negligibly to the results, and Gate E is negative, so no statement here
+concerns memory. None of the numbers is a closed-loop result. A
+closed-loop falsification battery is left to future work
+(\S\ref{sec:disc5}); this note's protocol is the \emph{open-loop
 instrument} that any closed-loop claim should first pass. Only LIF of
 the three materials survives the readout controls as a carrier of task
 information, and only for the rate-code tasks.
@@ -473,10 +549,10 @@ RNG $4242$) writes \path{verify_wr_summary.json}.
 \item Environment: Python \SI{3.12}{}, numpy \SI{2.5}{},
 matplotlib; venv at \path{02\_cl/.venv312/}; \path{requirements.txt}
 pins versions.
-\item Reference framework: the closed-loop battery
-(\texttt{surrogate\_cl/results/task\_tracking.json}) is owned and
-maintained by the reference system; this note reads it only for
-cross-checks, never regenerates it \cite{embodied_neurocomp}.
+\item Scope: this note's claims rest on Gates B/C/D/E only (all
+artifacts above). A companion closed-loop battery lives in the separate
+\texttt{surrogate\_cl/} repository; it is \emph{not} regenerated here
+and none of the results in this note depend on it \cite{embodied_neurocomp}.
 \item Video: \path{video/pulse_raster.mp4}, \path{video/g1_walk.mp4},
 \path{video/g1_closed_loop.mp4}; produced by \path{make_video.py},
 \path{robot_video.py}, \path{closed_loop_video.py}.
