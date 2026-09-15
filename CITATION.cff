@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this research line in your work, please cite the project registry."
+title: "Does the substrate compute? Closed-loop information-theoretic validation of a neuromorphic substrate on the cortical-labs contract for humanoid locomotion"
+abstract: >-
+  Three-phase research line demonstrating that a spiking neural network trained
+  in-silico can carry a load-bearing control task for a humanoid through the
+  Cortical Labs API contract, with mutual-information and transfer-entropy
+  validation and a measured physical authority envelope.
+keywords:
+  - neuromorphic computing
+  - spiking neural networks
+  - wetware
+  - cortical-labs-contract
+  - closed-loop control
+  - humanoid locomotion
+  - mutual information
+  - transfer entropy
+license: MIT
+version: 0.1.0
+date-released: "2026-09-14"
+authors:
+  - family-names: Barreto
+    given-names: Daleth
+    email: alandaleth.hb@gmail.com
+repository-code: "https://github.com/Daleth-Barreto/icra2027"
+references:
+  - type: software
+    title: "surrogate-cl: load-bearing substrate validation on the Cortical Labs contract"
+    url: "https://github.com/Daleth-Barreto/surrogate-cl"

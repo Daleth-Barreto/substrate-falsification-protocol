@@ -1,0 +1,21 @@
+# Nested phase repositories live in their own git repositories
+01_snn/
+02_cl/
+03_union/
+
+# Third-party assets fetched by scripts/bootstrap (about 2 GB)
+third_party/
+
+# Environments and caches
+.venv/
+venv/
+bl1_venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
