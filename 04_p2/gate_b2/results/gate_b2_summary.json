@@ -1,0 +1,255 @@
+{
+  "calibration": {
+    "izh_k_ro": 0.2617813037337277,
+    "lif_k_ro": 0.017324647990321195
+  },
+  "criteria": {
+    "baseline_control": true,
+    "izh_beat_own_null_frac": 1.0,
+    "lif_beat_own_null_frac": 1.0
+  },
+  "decide_map": {
+    "cap": 0.75,
+    "gate": 1.0,
+    "slow": 1.0,
+    "thsig_base": 0.0615,
+    "thsig_gain": 0.277
+  },
+  "k_null": 50,
+  "null": "paired per-neuron circular shift",
+  "per_profile": {
+    "baseline": {
+      "izh": {
+        "mi_obs_mean": 0.0,
+        "mi_signif_frac": 0.0,
+        "mi_signif_l05": 0,
+        "mi_z_mean": 0.0,
+        "n_seeds": 6,
+        "rho_mean": 0.0,
+        "rho_signif_l05": 0,
+        "rmse_signif_l05": 5,
+        "rmse_z_mean": -2.4876661151234827
+      },
+      "lif": {
+        "mi_obs_mean": 0.0,
+        "mi_signif_frac": 0.0,
+        "mi_signif_l05": 0,
+        "mi_z_mean": -2.465190328815662e-22,
+        "n_seeds": 6,
+        "rho_mean": 0.0,
+        "rho_signif_l05": 0,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -19.320078912931994
+      }
+    },
+    "descend": {
+      "izh": {
+        "mi_obs_mean": 0.6274453609914853,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 38.9522590711471,
+        "n_seeds": 6,
+        "rho_mean": 0.8920615350210263,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -12.662499693343575
+      },
+      "lif": {
+        "mi_obs_mean": 1.0342345918570979,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 18.768799096174988,
+        "n_seeds": 6,
+        "rho_mean": 0.9331381022432921,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -7.264490754158196
+      }
+    },
+    "multi_step": {
+      "izh": {
+        "mi_obs_mean": 0.44375979071434074,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 64.30065862537805,
+        "n_seeds": 6,
+        "rho_mean": 0.8220465029236723,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -101.50552235810768
+      },
+      "lif": {
+        "mi_obs_mean": 0.6811470025967398,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 11.102772411529493,
+        "n_seeds": 6,
+        "rho_mean": 0.9943110204054669,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -12.658792792668335
+      }
+    },
+    "perturb": {
+      "izh": {
+        "mi_obs_mean": 0.5355259804321809,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 37.59383773081839,
+        "n_seeds": 6,
+        "rho_mean": 0.8504289504883801,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -45.985653737572356
+      },
+      "lif": {
+        "mi_obs_mean": 0.9304258625731219,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 15.790381024200109,
+        "n_seeds": 6,
+        "rho_mean": 0.9315933444290113,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -4.526185579582838
+      }
+    },
+    "pulse": {
+      "izh": {
+        "mi_obs_mean": 0.24101916473054433,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 74.70876973680919,
+        "n_seeds": 6,
+        "rho_mean": 0.5698535875952078,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -150.08596682129854
+      },
+      "lif": {
+        "mi_obs_mean": 0.5741132463272199,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 15.406594783887309,
+        "n_seeds": 6,
+        "rho_mean": 0.9578975059572684,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -10.465512042054067
+      }
+    },
+    "ramp": {
+      "izh": {
+        "mi_obs_mean": 0.5709573285922492,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 43.92668427524206,
+        "n_seeds": 6,
+        "rho_mean": 0.8840543657480652,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -15.399808576027633
+      },
+      "lif": {
+        "mi_obs_mean": 1.1004055230658192,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 30.529137643465006,
+        "n_seeds": 6,
+        "rho_mean": 0.9548242108185846,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -8.41402119687976
+      }
+    },
+    "sine": {
+      "izh": {
+        "mi_obs_mean": 0.6144658375814932,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 24.44593628270394,
+        "n_seeds": 6,
+        "rho_mean": 0.879299893009149,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -34.21422578704554
+      },
+      "lif": {
+        "mi_obs_mean": 0.9660797005861118,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 14.236127837214624,
+        "n_seeds": 6,
+        "rho_mean": 0.9383415731413436,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -3.8792765025014737
+      }
+    },
+    "step_pulse": {
+      "izh": {
+        "mi_obs_mean": 0.22713014477489502,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 69.86737252561876,
+        "n_seeds": 6,
+        "rho_mean": 0.60524273268723,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -52.1288385428338
+      },
+      "lif": {
+        "mi_obs_mean": 0.6488691545560975,
+        "mi_signif_frac": 1.0,
+        "mi_signif_l05": 6,
+        "mi_z_mean": 18.65180432402766,
+        "n_seeds": 6,
+        "rho_mean": 0.9612440256794715,
+        "rho_signif_l05": 6,
+        "rmse_signif_l05": 6,
+        "rmse_z_mean": -26.08035960972339
+      }
+    }
+  },
+  "pooled": {
+    "izh": {
+      "mi_signif_l05_frac": 1.0,
+      "mi_signif_l05_n": 42,
+      "mi_z_mean": 50.542216892531066,
+      "n_cells": 42,
+      "rmse_signif_l05_frac": 1.0,
+      "rmse_signif_l05_n": 42
+    },
+    "lif": {
+      "mi_signif_l05_frac": 1.0,
+      "mi_signif_l05_n": 42,
+      "mi_z_mean": 17.78365958864274,
+      "n_cells": 42,
+      "rmse_signif_l05_frac": 1.0,
+      "rmse_signif_l05_n": 42
+    }
+  },
+  "profiles": [
+    "baseline",
+    "multi_step",
+    "sine",
+    "descend",
+    "pulse",
+    "ramp",
+    "perturb",
+    "step_pulse"
+  ],
+  "seeds": [
+    1,
+    7,
+    13,
+    29,
+    55,
+    91
+  ],
+  "subs": [
+    "lif",
+    "izh"
+  ],
+  "verdict": "PASS"
+}
