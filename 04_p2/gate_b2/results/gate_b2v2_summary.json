@@ -1,0 +1,537 @@
+{
+  "calibration": {
+    "izh_k_ro": 0.2617813037337277,
+    "lif_k_ro": 0.017324647990321195
+  },
+  "criteria": {
+    "fp_control_clean": true,
+    "izh_all_null_types_l95": true,
+    "lif_all_null_types_l95": true
+  },
+  "experiment": "gate_b2v2",
+  "false_positive_control": {
+    "note": "drive_gain=0 (no task signal) under circshift null",
+    "significant_cells": {
+      "noise": {
+        "izh": 0,
+        "lif": 0
+      },
+      "ramp": {
+        "izh": 0,
+        "lif": 0
+      },
+      "sine": {
+        "izh": 0,
+        "lif": 0
+      }
+    }
+  },
+  "k_null": 50,
+  "null_suite": {
+    "blockshuffle": "per-neuron B-window block shuffle",
+    "circshift": "per-neuron circular shift (rotated sequence)",
+    "identityswap": "per-window permutation of neuron identity"
+  },
+  "null_types": [
+    "circshift",
+    "blockshuffle",
+    "identityswap"
+  ],
+  "per_profile": {
+    "baseline": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 1.0,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "circshift": {
+          "p_min": 1.0,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "identityswap": {
+          "p_min": 1.0,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 1.0,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "circshift": {
+          "p_min": 1.0,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "identityswap": {
+          "p_min": 1.0,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        }
+      }
+    },
+    "chirp": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "descend": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "multi_step": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "noise": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "perturb": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "pulse": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "ramp": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "sine": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    },
+    "step_pulse": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "circshift": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        },
+        "identityswap": {
+          "p_min": 0.0196078431372549,
+          "signif_frac": 1.0,
+          "signif_l05": 6
+        }
+      }
+    }
+  },
+  "pooled": {
+    "izh": {
+      "blockshuffle": {
+        "n_cells": 54,
+        "signif_l05_frac": 1.0,
+        "signif_l05_n": 54
+      },
+      "circshift": {
+        "n_cells": 54,
+        "signif_l05_frac": 1.0,
+        "signif_l05_n": 54
+      },
+      "identityswap": {
+        "n_cells": 54,
+        "signif_l05_frac": 1.0,
+        "signif_l05_n": 54
+      }
+    },
+    "lif": {
+      "blockshuffle": {
+        "n_cells": 54,
+        "signif_l05_frac": 1.0,
+        "signif_l05_n": 54
+      },
+      "circshift": {
+        "n_cells": 54,
+        "signif_l05_frac": 1.0,
+        "signif_l05_n": 54
+      },
+      "identityswap": {
+        "n_cells": 54,
+        "signif_l05_frac": 1.0,
+        "signif_l05_n": 54
+      }
+    }
+  },
+  "profiles": [
+    "baseline",
+    "multi_step",
+    "sine",
+    "descend",
+    "pulse",
+    "ramp",
+    "perturb",
+    "step_pulse",
+    "chirp",
+    "noise"
+  ],
+  "ridge_invariance": {
+    "izh": [
+      {
+        "mi_obs_ridge": 0.6441317738481004,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 1
+      },
+      {
+        "mi_obs_ridge": 0.6856624773182474,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 7
+      },
+      {
+        "mi_obs_ridge": 0.6064505161405629,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 13
+      },
+      {
+        "mi_obs_ridge": 0.6018425447410827,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 29
+      },
+      {
+        "mi_obs_ridge": 0.7032370258958427,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 55
+      },
+      {
+        "mi_obs_ridge": 0.595390723539816,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 91
+      }
+    ],
+    "lif": [
+      {
+        "mi_obs_ridge": 0.8204388742582785,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 1
+      },
+      {
+        "mi_obs_ridge": 0.7142123878388213,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 7
+      },
+      {
+        "mi_obs_ridge": 0.7411416369150676,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 13
+      },
+      {
+        "mi_obs_ridge": 0.7181656988346672,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 29
+      },
+      {
+        "mi_obs_ridge": 0.7048784216854217,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 55
+      },
+      {
+        "mi_obs_ridge": 0.6099571434477018,
+        "p_canon": 0.047619047619047616,
+        "p_ridge": 0.047619047619047616,
+        "seed": 91
+      }
+    ]
+  },
+  "seeds": [
+    1,
+    7,
+    13,
+    29,
+    55,
+    91
+  ],
+  "verdict": "PASS"
+}

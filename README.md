@@ -18,7 +18,7 @@ no CL1 purchase).
 | F2 - contract | `02_cl/` | Can a control loop written against the Cortical Labs API contract (official `cl-sdk`, free, local) drive a simulated humanoid with an in-silico spiking substrate, inside real-time constraints? |
 | F3 - union | `03_union/` | Does the full stack (contract + neuromorphic substrate) reach a sprint, and what does each layer measurably contribute? |
 | protocol | `sandbox/` | **Does the substrate compute?** Four falsification gates (B–E) probe substrate material, readout robustness and memory with a matched dead-substrate null. |
-| robustness | `04_p2/` | Does the separation survive a null matched to the substrate's own marginal/temporal statistics (paired population null), and how far does it generalise? |
+| robustness | `04_p2/` | Does the separation survive a null suite (circshift + blockshuffle + identityswap, K=50 each), with a false-positive calibration and readout invariance under fixed-weight ridge?  YES — 54/54 per null type, 0/18 FP, 12/12 ridge. |
 
 ## Thesis
 
