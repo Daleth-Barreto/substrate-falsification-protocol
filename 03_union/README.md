@@ -10,7 +10,7 @@
 
 ## The strong claim lives in the surrogate line
 
-The publication-grade claim that the substrate *computes* is validated in the companion repository [`surrogate-cl`](https://github.com/Daleth-Barreto/surrogate-cl): information-theoretic validation (MI / transfer entropy) of a load-bearing velocity-tracking task through the spikes, lesion ablation, and a measured physical authority envelope. This phase stays focused on the substrate-interchangeability question currently in progress:
+The publication-grade claim that the substrate *computes* is validated by the falsification protocol in the `sandbox/` module of this repository (gates B–E, matched dead-substrate null) and by the closed-loop companion battery (versioned separately in `surrogate_cl/`, consumed read-only). This phase stays focused on the substrate-interchangeability question:
 
 - **Interchangeability contract test**: Nengo-LIF hub vs an Izhikevich substrate (`m9h/bl1`, JAX, CPU) vs a dead Poisson substrate, through the *same* contract, comparing spike statistics, tracking quality and information metrics. If BL-1 runs stably on CPU JAX, the claim is "substrate-interchangeable at the contract level (Nengo <-> Izhikevich <-> Poisson)".
 

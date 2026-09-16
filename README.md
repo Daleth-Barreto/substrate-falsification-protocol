@@ -108,7 +108,7 @@ If you use this work, please cite the protocol note:
 @misc{barreto2026substrate,
   title        = {Does the substrate compute? A matched dead-substrate
                   falsification protocol},
-  author       = {Barreto, Daleth},
+  author       = {Hernández Barreto, Alan Daleth},
   year         = {2026},
   howpublished = {\url{https://github.com/Daleth-Barreto/substrate-falsification-protocol}},
   note         = {In preparation (IEEE TNNLS target, method track)}
