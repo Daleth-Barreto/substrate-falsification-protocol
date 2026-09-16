@@ -10,7 +10,7 @@ neuron dynamics differ:
   LIF mean rates but are INDEPENDENT of the task input.
 
 The canonical calibrated decision map is reused verbatim from the research line
-(AGENTS.md):  vx = clamp((thsig - 0.0615) / 0.277, 0, 0.75) * gate * slow.
+:  vx = clamp((thsig - 0.0615) / 0.277, 0, 0.75) * gate * slow.
 """
 
 import numpy as np
@@ -28,7 +28,7 @@ TH0, K = 0.0615, 0.277
 
 
 def decide(thsig):
-    """Canonical calibrated decision map (verbatim from AGENTS.md)."""
+    """Canonical calibrated decision map (verbatim)."""
     return np.clip((np.asarray(thsig, dtype=float) - TH0) / K, 0.0, 0.75) * GATE * SLOW
 
 

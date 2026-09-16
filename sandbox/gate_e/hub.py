@@ -31,7 +31,7 @@ TH0, K = 0.0615, 0.277
 
 
 def decide(thsig):
-    """Canonical calibrated decision map (verbatim, AGENTS.md)."""
+    """Canonical calibrated decision map (verbatim)."""
     return np.clip((np.asarray(thsig, dtype=float) - TH0) / K, 0.0, 0.75) * GATE * SLOW
 
 

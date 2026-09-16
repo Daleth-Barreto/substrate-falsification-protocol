@@ -74,10 +74,10 @@ Details: `results/gate_e_summary.json`, `results/gate_e.png`,
   genuinely carries instantaneous task info (Gate D carried +0.103 vs null);
   (c) fixed readout leaves information on the table.
 - **Next: Gate E suggests the real test belongs in the closed loop.** The
-  sandbox cannot run the plant; this is the boundary point to hand to the
-  tracking session (task profile with memory/perturbation) if the line wants a
-  functional substrate test. In-sandbox, the decisive deliverable is the
-  METHOD: decoder-invariant null + honest readout ablation (Gates B/D/E).
+  sandbox runs open-loop only; the companion closed-loop battery (separate repo)
+  is where a functional substrate test with memory-demanding profiles
+  (perturbation, terrain) should land. In-sandbox, the decisive deliverable is
+  the METHOD: decoder-invariant null + honest readout ablation (Gates B/D/E).
 
 ## Running
 

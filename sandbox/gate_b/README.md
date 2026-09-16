@@ -1,9 +1,9 @@
 # Gate B - substrate interchangeability probe
 
 Decisive experiment: does the *substrate* compute, holding wiring and decode
-fixed? Built in the isolated `sandbox` lane of opencode agent `opencode/big-pickle`
-(2026-09-14). Zero contact with the canonical experiment (`surrogate_cl/`) or any
-peer file; canonical numbers are only read, never written.
+fixed? Built in the isolated `sandbox` module (2026-09-14). The canonical
+closed-loop experiment (`surrogate_cl/`) is consumed read-only here; its numbers
+are only read, never rewritten.
 
 ## Protocol
 
@@ -17,7 +17,7 @@ wiring `w` and the SAME readout `wr`; only the neuron dynamics differ:
   firing, but INDEPENDENT of the task input.
 
 The readout channel feeds the canonical calibrated decode, reused verbatim from
-AGENTS.md of the research line:
+the research line calibration record:
 
     vx = clamp((thsig - 0.0615) / 0.277, 0, 0.75) * gate * slow,  gate = slow = 1
 

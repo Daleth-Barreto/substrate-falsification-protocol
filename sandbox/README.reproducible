@@ -1,17 +1,16 @@
-# Reproducibility freeze — "Which substrate computes?" method note
+# Reproducibility — "Which substrate computes?" method note
 
 Frozen environment for the method note in `paper/` (compiled PDF: `paper/main.pdf`).
 
 ## Environment
-- Python 3.12 venv: `02_cl\.venv312\` (numpy 2.5.3, matplotlib 3.11.2).
-  - On this machine the interpreter is at:
-    `C:\Proyectos\papers\Icra2027\02_cl\.venv312\Scripts\python.exe`
-  - A normal venv with numpy+matplotlib is sufficient.
-- MiKTeX (light compiler, user-installed; on PATH). `latexmk -pdf` or
+- Python 3.12 venv with numpy (2.5.3) and matplotlib (3.11.2). On this machine:
+  `C:\Proyectos\papers\Icra2027\02_cl\.venv312\Scripts\python.exe`
+  A normal venv with numpy+matplotlib is sufficient.
+- MiKTeX (light compiler, user-installed, on PATH). `latexmk -pdf` or
   `pdflatex` twice from `paper/` rebuilds `main.pdf`.
 
 ## Reproduce the artifact pipeline
-From the repo root (`sandbox/`):
+From `sandbox/`:
 
 1. Regenerate tables + figures from the stored JSON summaries
    (no hand-typed numbers, no reruns needed):
@@ -20,7 +19,7 @@ From the repo root (`sandbox/`):
    ```
    Writes `paper/tables/{tab_gateb,tab_gated,tab_gatee,canonical_numbers}.tex`
    and `paper/figures/{decoder_bars.png,...}` (canonical.png is copied from
-   `../surrogate_cl/results/task_tracking.png`; see `paper/figures/ATTRIBUTION.txt`).
+   the closed-loop companion's results; see `paper/figures/ATTRIBUTION.txt`).
 2. Rebuild the video (needs matplotlib + a runnable ffmpeg):
    ```
    python make_video.py
@@ -31,26 +30,23 @@ From the repo root (`sandbox/`):
    cd paper
    pdflatex main.tex   (twice; or latexmk -pdf main.tex)
    ```
+   A single-file reflow for Neural Computation format lives at `paper/main_nc.tex`
+   (`pdflatex main_nc.tex` twice).
 
 ## Full empirical runs (the experiments themselves)
 - Gate B (substrate swap, fixed readout): `gate_b/run.py`
 - Gate D (readout check, same spikes): `gate_d/run.py`
 - Gate E (memory tasks): `gate_e/run.py`
+
 Each writes a JSON summary under its `results/`; summaries are committed so the
 note is reproducible from the artifacts alone.
+
 - Robustness checks live in `verify/` (ridge-vs-direct, dead-null exactness,
   readout-channel ablation); see `paper/` §Verification.
 
 ## Canonical numbers note
-The close-loop canonical battery numbers cited in the note
-(RMSE 0.238; p_1s=0.0156; p_2s=0.0312; d_z=-8.58/-2.43/-38.94) are owned by the
-tracking session (`surrogate_cl/results/task_tracking.json`) and are read-only
-here; only copied into `paper/figures/` with attribution.
-
-## Commits this freeze covers
-- `d9dc1fd` sandbox+agent note
-- `d45651c` Gate B (PASS)
-- `8da94c9` Gate D (readout check)
-- `489495a` Gate E (memory negative)
-- `56c9c62` Gate D/E READMEs
-- `research-note-v1` tag = this freeze point (scripts + paper + video).
+The closed-loop canonical battery numbers cited in the note
+(RMSE 0.238; p_1s=0.0156; p_2s=0.0312; d_z=-8.58/-2.43/-38.94) come from the
+closed-loop companion repository (`surrogate_cl/results/task_tracking.json`),
+which is versioned separately and used read-only here; they are copied into
+`paper/figures/` only with attribution.

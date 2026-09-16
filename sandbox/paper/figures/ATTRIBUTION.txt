@@ -1,5 +1,5 @@
-canonical.png: COPIA (solo lectura) del artefacto canónico
-  source: ../../surrogate_cl/results/task_tracking.png
-  owner:  sesión de tracking (task_tracking.py) — propiedad de ese agente.
-  NUCA editar/regenerar aquí; los números citados en el texto vienen de
-  task_tracking.json (0.238; p_1s=0.0156; p_2s=0.0312; d_z=-8.58/-2.43/-38.94).
+canonical.png: copied read-only artefact from the closed-loop companion repo
+  source: surrogate_cl/results/task_tracking.png (versioned separately)
+  Owner: closed-loop tracking session. Do not edit/regenerate here; the numbers
+  cited in the text come from task_tracking.json
+  (0.238; p_1s=0.0156; p_2s=0.0312; d_z=-8.58/-2.43/-38.94).

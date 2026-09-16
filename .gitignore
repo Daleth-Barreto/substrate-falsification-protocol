@@ -1,18 +1,26 @@
-# Nested phase repositories live in their own git repositories
-01_snn/
-02_cl/
-03_union/
+# Runtime PDF/log intermediates
+*.aux
+*.log
+*.out
+*.synctex.gz
 
 # Third-party assets fetched by scripts/bootstrap (about 2 GB)
 third_party/
 
-# Environments and caches
-.venv/
+# Environments and caches (any Python version virtualenv)
+.venv*/
 venv/
 bl1_venv/
 __pycache__/
 *.py[cod]
 *.egg-info/
+
+# Local agent coordination (not part of the public scientific record)
+AGENTS.md
+COORDINATION_ME.md
+
+# Companion closed-loop repository: tracked separately (read-only lane here)
+surrogate_cl/
 
 # Editors / OS
 .idea/

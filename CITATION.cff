@@ -22,8 +22,8 @@ authors:
   - family-names: Barreto
     given-names: Daleth
     email: alandaleth.hb@gmail.com
-repository-code: "https://github.com/Daleth-Barreto/icra2027"
+repository-code: "https://github.com/Daleth-Barreto/substrate-falsification-protocol"
 references:
   - type: software
-    title: "surrogate-cl: load-bearing substrate validation on the Cortical Labs contract"
-    url: "https://github.com/Daleth-Barreto/surrogate-cl"
+    title: "surrogate-cl: closed-loop load-bearing substrate validation on the Cortical Labs contract"
+    note: "Deprecated URL: this companion lives in a separate repository and is consumed read-only."

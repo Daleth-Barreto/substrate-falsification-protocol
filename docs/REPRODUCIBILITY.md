@@ -14,7 +14,7 @@ Host that produced the results (September 2026):
 | Python | 3.12.13 (managed with `uv`, `uv` 0.11.32) |
 | Package manager | `uv pip` (`pip` not present inside the venv) |
 
-Pinned Python packages (from `02_cl/requirements.lock.txt`, shared with `surrogate-cl`):
+Pinned Python packages (from `02_cl/requirements.lock.txt`, shared with the closed-loop companion):
 
 | package | version | role |
 |---|---|---|
@@ -31,19 +31,19 @@ The BL-1 substrate environment (`03_union/bl1_venv`, `requirements-bl1.lock.txt`
 ## Determinism and seeds
 
 - The Nengo hub network is created with `seed=1` and is deterministic; per-run variance comes from the simulator RNG, the cultural spike/count RNG, and the lesion draw.
-- Multi-seed protocol: `{1, 7, 13, 29, 55}` for the tracking battery; `{7, 29}` for the Gate A captures.
-- Task profiles are fixed schedules injected on channel 62 (see `surrogate-cl` README).
-- The exact-permutation statistical test with 5 seeds has p-floor 1/32 (0.0625); no p < 0.05 claim is made (noted in `surrogate-cl/README.md`).
+- Multi-seed protocol: `{1, 7, 13, 29, 55, 91}` (6 seeds) for the canonical tracking battery (5 profiles x 5 modes x 6 seeds). The `{7, 29}` protocol belongs to the legacy Gate A captures.
+- Task profiles are fixed schedules injected on channel 62 (see the closed-loop companion README).
+- The exact-permutation statistical test with 6 seeds has p-floor 1/64 (one-sided); the observed separation is significant on all 5 profiles (p = 1/64 one-sided, 2/64 two-sided, 6/6 seeds same direction).
 
 ## Data provenance
 
 All timestamps reference sessions run with the corrected loop (the v1 velocity-channel bug is preserved only in the marked historical files).
 
-### surrogate-cl (`results/`)
+### Closed-loop companion battery (`results/`)
 
 | artefact | produced by | seeds | notes |
 |---|---|---|---|
-| `task_tracking.json` / `.png` | `src/task_tracking.py` | {1,7,13,29,55} | 5 profiles x 4 modes x 5 seeds, 12 s each |
+| `task_tracking.json` / `.png` | `src/task_tracking.py` | {1,7,13,29,55,91} | 5 profiles x 5 modes x 6 seeds, 12 s each, canonical |
 | `f1_capture_{mode}_s{seed}.json` | `src/capture_signal.py` | {7,29} | per-tick counts[64] + plant state, 5 modes |
 | `f1_capture_index.json` | `src/capture_signal.py` | - | capture manifest incl. wall time |
 | `f2_signal_summary.json` / `.png` | `src/signal_analysis.py` | {7,29} | MI/TE, 50-permutation shuffle null |
@@ -53,7 +53,7 @@ All timestamps reference sessions run with the corrected loop (the v1 velocity-c
 | `push_probe2/3.json` | `src/probe_push.py` | 7 | sustained push limits |
 | `task_progress.json` | `src/task_progress.py` | 7 | flat-ground distance |
 
-Wall-clock guidance for planning: a single 12 s, 40 TPS run takes roughly 20-55 s of wall time depending on host load; the full tracking battery (100 runs) is the dominant cost.
+Wall-clock guidance for planning: a single 12 s, 40 TPS run takes roughly 20-55 s of wall time depending on host load; the full tracking battery (150 runs) is the dominant cost.
 
 ### 01-snn / 02-cl
 

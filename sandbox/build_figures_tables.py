@@ -1,7 +1,7 @@
 """build_figures_tables.py — regenerate everything the PDF needs from JSON.
 
 Reads the gate_*/results/*_summary.json artifacts and the canonical
-task_tracking.json (READ-ONLY, owned by the tracking session) and emits:
+task_tracking.json (READ-ONLY, from the closed-loop companion repo) and emits:
   * paper/figures/decoder_bars.png        — RMSE by decoder & substrate
   * paper/figures/canonical.png           — copy of task_tracking.png (attribution)
   * paper/tables/tab_results.tex          — input table for the methods note
@@ -110,11 +110,11 @@ def main():
                 os.path.join(FIG, "canonical.png"))
     with open(os.path.join(FIG, "ATTRIBUTION.txt"), "w", encoding="utf-8") as f:
         f.write(
-            "canonical.png: COPIA (solo lectura) del artefacto canónico\n"
-            "  source: ../../surrogate_cl/results/task_tracking.png\n"
-            "  owner:  sesión de tracking (task_tracking.py) — propiedad de ese agente.\n"
-            "  NUCA editar/regenerar aquí; los números citados en el texto vienen de\n"
-            "  task_tracking.json (0.238; p_1s=0.0156; p_2s=0.0312; d_z=-8.58/-2.43/-38.94).\n"
+            "canonical.png: read-only copy of the canonical artefact\n"
+            "  source: surrogate_cl/results/task_tracking.png (companion repo)\n"
+            "  owner: closed-loop tracking session. Do not edit/regenerate here;\n"
+            "  the numbers cited in the text come from task_tracking.json\n"
+            "  (0.238; p_1s=0.0156; p_2s=0.0312; d_z=-8.58/-2.43/-38.94).\n"
         )
 
     # ----------------------------------------------------------------- tables
