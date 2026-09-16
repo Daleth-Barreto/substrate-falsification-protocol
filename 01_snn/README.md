@@ -88,7 +88,3 @@ The fidelity findings and the NEF speed limits in the inner loop define which su
 ## Reproducibility
 
 Environment and pins: see the project-level `docs/REPRODUCIBILITY.md` and the phase lock files. Third-party assets are fetched by the project bootstrap script.
-
-## Publication route
-
-Neuromorphic workshop (ICRA NFR / ICONS) or a short control-conference paper; base material for the final F3 paper.

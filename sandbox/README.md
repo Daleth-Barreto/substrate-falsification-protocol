@@ -26,7 +26,7 @@ map). The protocol probes the substrate with four controls:
 | `gate_d/` | cross-validated ridge readout battery, results, summary plots |
 | `gate_e/` | memory-demanding task battery (FIR8 filter) |
 | `verify/` | pipeline verification: physics, dead-substrate marginals, readout fits |
-| `paper/` | manuscript (ICRA-format `main.tex`, Neural-Comp.-format `main_nc.tex`) |
+| `paper/` | manuscript (`main.tex` two-column note, `main_nc.tex` single-column reflow) |
 | `video/` | open-loop robot playback and closed-loop screen captures |
 | `build_figures_tables.py` | regenerates all manuscript tables/figures from result JSONs |
 | `reproduce.py` | convenience driver to run the whole protocol end-to-end |

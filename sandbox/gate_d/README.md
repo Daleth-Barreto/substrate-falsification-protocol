@@ -73,10 +73,10 @@ Traces: `results/gate_d_summary.json`, `results/gate_d.png`,
   mean, or optimal-linear. That is the publishable core.
 - The **"substrate interchangeability" claim of Gate B is REVISED**: LIF and
   IZH do not interchange under the best linear readout — LIF genuinely carries
-  the task, IZH mostly did not. Any ICRA-2028 document must not claim that
-  "any spiking substrate computes"; it must claim that LIF-type rate coding
-  carries task information (Δcarried +0.103 vs null) while the dead null and a
-  poorly-informative substrate do not, and that a fixed readout can both
+  the task, IZH mostly did not. Any publication based on this protocol must not
+  claim that "any spiking substrate computes"; it must claim that LIF-type rate
+  coding carries task information (Δcarried +0.103 vs null) while the dead null
+  and a poorly-informative substrate do not, and that a fixed readout can both
   inflate (IZH) and mask (LIF vs ridge) the substrate's information.
 - **Follow-up (Gate E)** tested a task that REQUIRES memory: the dead null
   stays dead, but the neural substrates also do NOT transpose past input into

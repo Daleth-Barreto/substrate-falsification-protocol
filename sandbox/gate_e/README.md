@@ -65,10 +65,10 @@ Details: `results/gate_e_summary.json`, `results/gate_e.png`,
 ## Consequence for the research line (do NOT over-claim)
 
 - The **mini is a decoder/readout diagnostic, not a place to demonstrate
-  substrate memory**. Any ICRA-2028 claim of "the substrate contributes
-  computation" must rest on the CLOSED-LOOP canonical battery (where the loop
-  itself and time-locked dynamics carry TE and stability), NOT on this
-  open-loop command-tracking mini.
+  substrate memory**. Any claim of "the substrate contributes computation" must
+  rest on the CLOSED-LOOP canonical battery (where the loop itself and
+  time-locked dynamics carry TE and stability), NOT on this open-loop
+  command-tracking mini.
 - The methodology conclusions that DO survive: (a) matched dead-substrate null
   is exactly zero-informative under memory demands; (b) LIF's rate code
   genuinely carries instantaneous task info (Gate D carried +0.103 vs null);

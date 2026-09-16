@@ -43,13 +43,12 @@ The publication-grade claim that the substrate *computes* is validated by the fa
 
 The central ablation is **what each layer contributes**: spiking = sparse / energy; contract = determinism / latency / upgrade.
 
-## Deliverables
+## Open items
 
-- [ ] substrate adapter (F4) and Gate B (BL-1 stable on CPU JAX)
-- [ ] sprint >= 3 m/s on H1 or G1 (preliminary sample; 6 m/s needs RL training, out of GPU scope)
-- [ ] ablation table + figures (trajectories, spike rasters, latency histogram)
-- [ ] paper (ICRA 2028 fixed target; IEEE RA-L preferred route): 8 pages, keywords Neurorobotics / Humanoid and Bipedal Locomotion / Learning and Adaptive Systems
-- [ ] video <= 180 s
+- substrate adapter (F4) and Gate B (BL-1 stable on CPU JAX)
+- sprint >= 3 m/s on H1 or G1 (preliminary sample; 6 m/s needs RL training, out of GPU scope)
+- ablation table + figures (trajectories, spike rasters, latency histogram)
+- video <= 180 s
 
 ## Close neighbours (research consolidation, September 2026)
 
@@ -59,6 +58,6 @@ The central ablation is **what each layer contributes**: spiking = sparse / ener
 
 ## Notes / ethics / upgrade path
 
-- Simulation-only and quantified (ICRA rule): no sim-to-real promise, everything is measured in simulation.
+- Simulation-only and quantified: no sim-to-real promise, everything is measured in simulation.
 - The biocomputation claim is limited to *architectural compatibility with the CL contract*: the same code runs on CL1 / Cortical Cloud later as future validation. This is stated, not executed, in the paper.
 - Licensing: `cl-sdk` is CC BY-NC (academic only); `m9h/bl1` is MIT; energy claims require counted memory plus fixed throughput/time-sparsity (NeuroBench) and are not yet claimed.

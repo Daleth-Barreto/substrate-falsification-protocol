@@ -111,12 +111,12 @@ If you use this work, please cite the protocol note:
   author       = {Hernández Barreto, Alan Daleth},
   year         = {2026},
   howpublished = {\url{https://github.com/Daleth-Barreto/substrate-falsification-protocol}},
-  note         = {In preparation (IEEE TNNLS target, method track)}
+  note         = {Manuscript in preparation}
 }
 ```
 
-## Publications status
+## Status
 
-- **IEEE TNNLS** is the method-track target for the falsification protocol note.
-- The closed-loop milestone (baseline, information-theoretic validation, dead
-  null, substrate interchangeability) is complete, versioned and canonical.
+The falsification protocol (gates B–E), its artifacts, tables and figures, and
+the closed-loop validation battery are complete, versioned and reproducible from
+this repository (regenerated from committed JSON summaries).

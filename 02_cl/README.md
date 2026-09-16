@@ -94,21 +94,15 @@ Honest reading (important for the paper):
 | F2-E3 | DishBrain-style learning (gait selection, target velocity) | convergence sample, spikes/actions |
 | F2-E4 | BL-1 substrate vs Poisson (negative control) | behavioural divergence |
 
-## Deliverables
+## Status
 
-- [x] `bridge_g1.py` working (cl-sdk <-> MuJoCo walker)
-- [x] Reproducible closed-loop demo (12 s, walker walks) + `f2_demo.json/png`
-- [x] M3 ablations (neural/zero/random/mask0.5) + M4 latency (`f2_ablation*.json/png`)
-- [ ] BL-1 substrate in contract -- in progress (see `03_union` and the surrogate Gate B)
-- [ ] Latency report vs the 25 ms control budget in the paper (latency already measured)
+- `bridge_g1.py` working (cl-sdk <-> MuJoCo walker)
+- Reproducible closed-loop demo (12 s, walker walks) + `f2_demo.json/png`
+- M3 ablations (neural/zero/random/mask0.5) + M4 latency (`f2_ablation*.json/png`)
 
 ## Reproducibility
 
 Environment and pins: see the project-level `docs/REPRODUCIBILITY.md` and `requirements.lock.txt`. Third-party assets (G1 model, menagerie MJCF, `unitree_rl_gym` deployment with `motion.pt`) are fetched by the project bootstrap script.
-
-## Publication route
-
-ICRA "Neuromorphic Field Robotics" workshop (active since 2026) or a biocomputing journal (Cyborg and Bionic Systems / Frontiers), first-but-at-scale real-time validation of the CL contract in closed-loop dynamics.
 
 ## Notes / ethics
 
