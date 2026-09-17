@@ -1,0 +1,19 @@
+% TABLA Gateway B2: null-suite emparejada (circshift/blockshuffle/
+% identityswap), K=50 por cell; FP control y readout-invariance.
+% desde 04_p2/gate_b2/results/gate_b2v2_summary.json (read-only)
+\begin{tabular}{llrrr}
+\toprule
+null type & substrate & sig MI cells & total & frac. \\
+\midrule
+\texttt{circshift} & LIF & 54 & 54 & 1.00 \\
+\texttt{circshift} & Izhikevich & 54 & 54 & 1.00 \\
+\texttt{blockshuffle} & LIF & 54 & 54 & 1.00 \\
+\texttt{blockshuffle} & Izhikevich & 54 & 54 & 1.00 \\
+\texttt{identityswap} & LIF & 54 & 54 & 1.00 \\
+\texttt{identityswap} & Izhikevich & 54 & 54 & 1.00 \\
+\bottomrule
+\end{tabular}
+
+% FP control (drive_gain=0, no task signal): cells per profile =
+% {"noise": {"izh": 0, "lif": 0}, "ramp": {"izh": 0, "lif": 0}, "sine": {"izh": 0, "lif": 0}} | criterion fp_control_clean=True.
+% Readout invariance (fixed weights): 12/12 cells, p=0.0476.

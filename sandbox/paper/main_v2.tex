@@ -1,0 +1,950 @@
+%%====================================================================
+%%  A falsification protocol for simulated embodied spiking substrates:
+%%  separating substrate-carried information from readout-channel
+%%  information (v2)
+%%
+%%  v2 changes vs main.tex (v1), all backed by JSON artifacts:
+%%   - Gate B2: paired population null suite (circshift/blockshuffle/
+%%     identityswap, K=50), false-positive control, readout invariance;
+%%   - Gate D bis: nonlinear (MLP residual) readout on the same spikes;
+%%   - Gate F: recurrence ablation promoted from a remark to a gate;
+%%   - seed-level exact statistics at n=20 seeds (was n=6);
+%%   - hedged language on TE/MI (estimator-specific) and "simulated";
+%%   - new literature (NeuroBench, RC benchmark critique, ...).
+%%
+%%  Build (MiKTeX):
+%%      cd sandbox/paper && pdflatex main_v2.tex && pdflatex main_v2.tex
+%%
+%%  All numbers injected from JSON artifacts by build_figures_tables.py.
+%%  v1 (main.tex) is kept frozen; this file is the v2 deliverable.
+%%====================================================================
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,urlcolor=blue,citecolor=blue,linkcolor=blue]{hyperref}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage{float}
+
+\newcommand{\sub}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\RMSE}{\ensuremath{\mathrm{RMSE}}}
+\newcommand{\MI}{\ensuremath{\mathrm{MI}}}
+\newcommand{\TE}{\ensuremath{\mathrm{TE}}}
+\newcommand{\dfloor}{\ensuremath{\Delta\RMSE_{\mathrm{floor}}}}
+\newcommand{\palt}{0.75\,u}          % passthru (no-substrate) reference
+
+\title{\vspace{-1.5em}A falsification protocol for simulated embodied
+spiking substrates\\[0.3em]
+{\large Separating substrate-carried information from readout-channel
+information}\vspace{-0.5em}}
+
+\author{Alan Daleth Hernández Barreto}
+\date{\today}
+
+\begin{document}
+\maketitle
+\vspace{-3em}
+
+\begin{abstract}
+\noindent
+When a population of spiking neurons is read out to control a simulated
+body, ``the substrate computes'' is often claimed from a decoded error
+or a mutual-information value. We argue that such a claim is not
+falsifiable unless the substrate is swapped for a \emph{matched dead
+substrate} that preserves the single-neuron marginal firing statistics
+(mean, variance, silent fraction) while being statistically independent
+of the task, and unless the readout is itself controlled. We build a
+minimal simulated embodied hub ($2{,}000$ neurons, fixed sparse wiring,
+one calibrated decision map) and run a battery of gates: (B) substrate
+swap under a fixed readout; (B2) a \emph{paired population null suite}
+(per-neuron circular shift, block shuffle, identity swap) with a
+false-positive control and a fixed-weight readout-invariance test;
+(C) readout-channel ablation; (D) cross-validated ridge readout of the
+\emph{same} spikes; (D\,bis) a small nonlinear (MLP) readout on the same
+spikes; (E) memory-demanding tasks; and (F) a recurrence ablation. The
+matched dead substrate is task-independent by construction and stays at
+the null floor under every readout (one-sided $p=1/64$ per profile,
+$6/6$ seeds; under the paired null suite, $54/54$ task-varying cells at
+$p\le0.05$ for each of the three null types), with zero false positives
+in the dead-drive control ($0/18$) and a fixed-weight readout-invariance
+result that survives at the resolution of the null sample ($12/12$,
+$p=0.0476$). The living substrates do not uniformly survive. LIF carries
+the task through a cross-validated linear readout
+($\Delta\RMSE_{\mathrm{floor}}=+0.094$ vs.\ the mean-predictor floor;
+$\MI$ significant in $24/30$ runs) and a small nonlinear readout does
+not change that materially ($+0.105$); a seed-level paired test at
+$n=20$ seeds is decisive for LIF ($20/20$ seeds same direction,
+$p\approx10^{-5}$). The apparent Izhikevich tracking seen under the fixed
+calibrated readout is largely a \emph{readout-channel artifact}:
+randomizing the readout projection collapses both living substrates to
+the dead floor ($3/3$ seeds), a cross-validated linear readout of the
+same IZH spikes leaves RMSE essentially at the floor
+($\Delta\RMSE_{\mathrm{floor}}=-0.008$), and a nonlinear readout recovers
+only a small amount ($+0.012$, $16/20$ seeds same direction). None of the
+substrates shows linearly decodable history in the present-window
+population state (Gate E negative), so memory claims are not certified
+here. We conclude: (i) matched dead-substrate controls for the
+\emph{material} of a substrate are cheap, decisive, and should precede
+scoreboard comparisons; (ii) readout \emph{robustness} is a stronger
+falsification test than a single scoreboard, and we reserve the word
+``invariance'' for what our experiments cannot show; and (iii) open-loop
+diagnosis cannot certify memory, which must be demonstrated in the closed
+loop.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+
+Physical and simulated substrates for neural computation---in-vitro
+cultures \cite{kagan2022dishbrain}, neuromorphic silicon
+\cite{maass1997,lukosevicius2009,wringe2025rc}, or toy spiking
+hubs---are routinely evaluated by coupling them to a task and reporting
+a score: a decoded error, a correlation, a bit rate. Two distinct claims
+are usually conflated under that score. The first is
+\emph{substrate-carried information}: spike patterns produced by the
+substrate contain task-relevant statistics. The second is
+\emph{readout-channel information}: the fixed mapping used to translate
+spikes into a decision happens to recover (or inject) task statistics. A
+scoreboard alone cannot tell them apart, and the recent discussion
+around ``intelligence in a dish''
+\cite{kagan2022dishbrain,balci2023neurons,kagan2023semantics,
+smirnova2023organoid} shows that this conflation has consequences far
+beyond toy models.
+
+The contribution of this note is a \emph{falsification protocol} that
+separates the two. It rests on three ingredients, all cheap:
+
+\begin{itemize}[nosep]
+\item \textbf{A matched dead substrate} (Gate B). The wiring, bias,
+drive and readout are kept fixed; only the per-neuron dynamics change.
+The dead substrate fires Poisson processes with per-neuron rates
+matched to the LIF marginal histogram, but is statistically independent
+of the task. Any substrate that cannot beat this null under a fixed
+readout is not falsifiably carrying the task.
+\item \textbf{A paired population null suite} (Gate B2). A null built
+from a single i.i.d.\ Poisson process matches only the single-neuron
+marginal and discards temporal structure; a stronger, still cheap
+control is to build \emph{sample-matched} surrogates of the substrate's
+own spike trains (per-neuron circular shift, block shuffle, identity
+swap) and test the observed statistic against them
+\cite{theiler1992}. We also add a dead-drive
+false-positive control and a fixed-weight readout-invariance test.
+\item \textbf{Readout controls} (Gates C, D, D\,bis and F). Gate C
+randomizes the readout projection into the fixed decision map; Gate D
+replaces the hand-tuned readout with a cross-validated ridge readout
+trained on the \emph{same} spikes; Gate D\,bis adds a small nonlinear
+(MLP) residual readout to bound how much linearity hides; Gate F
+ablates recurrence. Task information that remains recoverable after
+\emph{all} controls is evidence the substrate activity itself, rather
+than the calibrated interface alone, carries the signal. Throughout we
+reserve stronger language (``invariance'') for what the experiments
+cannot show, and use \emph{readout robustness} for what they do.
+\end{itemize}
+
+Gate E then asks the harder question---whether present-window population
+activity carries task \emph{history}---which is the minimum a memory
+claim needs. Throughout, the replication unit is the seed. Gates B/D/E
+pool $6$ seeds $\times$ $5$ profiles; Gate C uses $3$ seeds; Gate D is
+additionally repeated at \emph{$n=20$ seeds} with an exact seed-level
+paired permutation test; Gates B2 uses the $6$ seeds $\times$ $10$
+profiles with $K=50$ paired nulls per cell.
+
+\section{Related work}\label{sec:related}
+
+Six literatures touch the same question from different angles.
+
+\textbf{(1) Embodied neural computation.} ``Intelligence without
+representation'' \cite{brooks1991} and morphology-computation continua
+\cite{pfeifer2006how} established that behavior is jointly determined
+by body, wiring and control; more recent work formalizes that for
+neuromorphic-body systems \cite{dangelo2026benchmark,bartolozzi2022embodied}.
+These works score systems, but do not isolate the substrate's material
+from its interface. Our hub is deliberately a \emph{simulated} body; the
+protocol is what transfers, not the embodiment.
+
+\textbf{(2) In-vitro substrates and the DishBrain debate.} Kagan et
+al.\ reported task-relevant responses of cultured cortical neurons in a
+closed loop \cite{kagan2022dishbrain}; the follow-up correspondence
+\cite{balci2023neurons,kagan2023semantics} turned precisely on whether
+the observed signal is attributable to the biology or to the
+measurement/readout interface, and the broader organoid-intelligence
+program \cite{smirnova2023organoid,embodied_neurocomp} inherits the same
+methodological question. Our protocol is a minimal, fully deterministic
+enactment of that critique.
+
+\textbf{(3) Spiking and reservoir computing.} Spiking neuron models
+\cite{maass1997,izhikevich2003,izhikevich2004,gerstner2002} and liquid
+state machines / echo-state networks \cite{maass2002liquid,
+jaeger2001echo,lukosevicius2009} show that random recurrent populations
+can support surprisingly capable online regression. The standard
+evaluation there is already readout-shaped (train a readout, report
+performance); recent critiques of reservoir-computing benchmarks
+\cite{wringe2025rc,yan2024rc} make explicit that task scores alone are
+hard to compare and easy to over-read. What is usually missing is the
+\emph{dead-material control}---the same readout trained on matched
+independent Poisson spikes \cite{lukosevicius2009}---and paired
+sample-matched surrogates of the substrate's own activity.
+
+\textbf{(4) Neuromorphic benchmarks.} NeuroBench
+\cite{neurobench2025} and related efforts define task suites, metrics
+and complexity accounting for neuromorphic algorithms and systems, and
+embodied extensions are emerging \cite{dangelo2026benchmark}. Benchmark
+suites standardize \emph{what} to score; they do not, by themselves,
+supply the substrate-\emph{material} null that our protocol requires.
+
+\textbf{(5) Population decoding and information measures.} Neural
+coding theory provides the tools: population decoding with regularized
+linear readouts \cite{georgopoulos1986,quiroga2009,paninski2004,
+hoerl1970}, mutual information and its bias correction
+\cite{shannon1948,kraskov2004,panzeri2007}, transfer entropy with
+surrogate-based significance \cite{schreiber2000,walker2018}, and
+nonlinear readouts (kernel methods, MLPs, population models)
+\cite{paninski2004,steinmetz2019}. Our Gate D uses exactly this
+machinery; the dead-substrate null is the novel anchor against which
+those measures should be read.
+
+\textbf{(6) Null models and statistical rigor.} Surrogate-data methods
+\cite{theiler1992}, permutation statistics \cite{ernst2004},
+pseudo-replication warnings \cite{hurlbert1984}, and closed-loop
+validation practice in brain-machine interfaces
+\cite{carmena2003,nicolelis2003} all argue that a structurally matched
+null is the difference between an effect and an artifact. Gates~B2 and
+C are surrogate tests applied to the \emph{substrate and readout
+channel} rather than to a single scalar series.
+
+\section{Methods}\label{sec:methods}
+
+\subsection{Embodied hub and wiring}\label{sec:hub}
+
+$N=2{,}000$ neurons, $N_{\mathrm{win}}=200$ control windows of
+$C_W=20$ integration steps ($\SI{10}{ms}$ bins, $\SI{0.5}{ms}$
+integration). The input projection
+$\mathbf{g}\in\mathbb{R}^{N\times1}$ is standard-normal;
+recurrence $\mathbf{W}$ is sparse with connection probability
+$p_{\mathrm{re}}=0.01$ and entries drawn
+$\mathcal{N}(0,1/\sqrt{N p_{\mathrm{re}}})$ (variance-normalized so the
+network operates near stability); the readout projection is
+$\mathbf{w}_r=\mathbf{g}$ (channel aligned with the input projection),
+with a per-substrate scale $k_{\mathrm{ro}}$ (below). The decision map
+is the calibrated one of the reference system
+\cite{embodied_neurocomp},
+$\hat{x}=\mathrm{clip}((\theta_{\mathrm{sig}}-0.0615)/0.277,\ 0,\ 0.75)$,
+clamped to $\SI{0.75}{m/s}$. Five control profiles
+($\mathtt{baseline},\mathtt{multi\_step},\mathtt{sine},\mathtt{descend},
+\mathtt{pulse}$), six seeds $\{1,7,13,29,55,91\}$ for Gates B/C/D/E,
+and Gate B2 additionally uses five profiles of a broader battery
+($\mathtt{ramp},\mathtt{perturb},\mathtt{step\_pulse},\mathtt{chirp},
+\mathtt{noise}$). Gate~D is repeated with $n=20$ seeds
+(Section~\ref{sec:seeds20}).
+
+\subsection{Substrates and the matched dead null}\label{sec:subs}
+
+Three dynamics on identical wiring, bias, drive and readout constants:
+
+\begin{itemize}[nosep]
+\item \textbf{LIF}: leaky integrate-and-fire, $\tau=\SI{20}{ms}$,
+threshold $v_{\mathrm{th}}=1$, reset $0$, refractory $\SI{2}{ms}$.
+\item \textbf{Izhikevich:} regular spiking parameters [``RS'', (0.02,
+0.2, $-65$, $8$)] integrated with the $\SI{0.5}{ms}$ step; adaptation
+dimension $u$ and $a=0.02$, $b=0.2$, $c=-65$, $d=8$.
+\item \textbf{Matched dead null (Poisson):} per-neuron events drawn
+independently each integration step from Bernoulli trials with
+probability $r_i$; the $r_i$ are estimated from LIF's per-neuron
+firing in a constant-input ($u=0.5$) calibration run
+\cite{theiler1992}, so the marginal per-neuron rates match. Table
+\ref{tab:hist} reports the match quality explicitly; the null is
+\emph{statistically independent} of $u$ by construction.
+\end{itemize}
+
+The key design point is that the match is at the level of the
+\emph{single-neuron marginal rate histogram}---mean $\mu_r$, variance,
+and the fraction of near-silent neurons---not at the level of any
+temporal or population structure. This is what makes Gate~B a
+\emph{substrate} test rather than a firing-rate test. Table
+\ref{tab:hist} (from \texttt{gate\_b\_summary.json}) gives
+$\mu_r=\SI{8.09}{Hz}$, SD $\SI{15.30}{Hz}$, Fano
+$\sigma^2/\mu=28.9$ (overdispersed vs.\ a homogeneous Poisson) and
+$74\%$ neurons with ~zero estimated rate.
+
+\begin{table}[H]
+\centering
+\caption{Match quality of the dead null to the LIF marginal:
+per-neuron mean rate, SD, Fano factor $\sigma^2/\mu$, and the silent
+fraction (neuron with $\hat r_i\approx0$). The null draws Bernoulli
+events at the matched per-neuron probabilities, independent of $u$.}
+\label{tab:hist}
+\input{tables/tab_hist.tex}
+\end{table}
+
+\subsection{Calibration without leakage}\label{sec:calib}
+
+$k_{\mathrm{ro}}$ is fixed per substrate from a \emph{constant-input}
+calibration run ($u=0.5$, seed $7$): $k_{\mathrm{ro}}=0.2/
+\langle \mathbf{w}_r\!\cdot \mathrm{rate}\rangle$ sets the decision
+series at the middle of the map's active range. Crucially, calibration
+never sees a \emph{task-varying} input, so no task information leaks
+into the readout constant. The same $k_{\mathrm{ro}}$ survives Gate~C:
+the randomized projection is rescaled to the same norm
+($\|\mathbf{w}_r^{\mathrm{rand}}\|=\|\mathbf{g}\|$), so the constant
+remains comparable. The Poisson null uses the LIF-derived $k_{\mathrm{ro}}$
+plus a $k_{\mathrm{ro}}^{\mathrm{poisson}}$ from its own constant-input
+run, again $0.2/\langle\cdot\rangle$.
+
+\subsection{Gate B2: paired population null suite}\label{sec:gateb2}
+
+Gate~B's dead null is i.i.d.\ and therefore destroys any temporal
+structure. To test the substrate against its own activity, for each
+profile and seed we build $K=50$ sample-matched surrogates of the
+recorded counts and recompute the same readout statistic:
+
+\begin{itemize}[nosep]
+\item \texttt{circshift}---per-neuron circular shift of the window
+sequence (preserves each neuron's marginal and autocorrelation on the
+torus);
+\item \texttt{blockshuffle}---shuffle contiguous blocks of windows
+(block length $B=5$), destroying long-range task alignment while
+keeping short-range structure;
+\item \texttt{identityswap}---exchange the window order across neurons
+(preserves the exact per-window population envelope, destroying
+neuron--task alignment).
+\end{itemize}
+
+The observed statistic is compared to the $K$ surrogate values with a
+one-sided rank test; a cell is significant at $\alpha=0.05$. As a
+false-positive control we rerun the whole pipeline with
+\texttt{drive\_gain}=0 (no task signal) on three profiles
+($\mathtt{sine}$, \texttt{noise}, \texttt{ramp}) $\times$ $6$ seeds
+$\times$ $2$ substrates: no cell may be significant. Finally, a
+\emph{fixed-weight readout-invariance} test refits nothing: the ridge
+weights learned on the real spikes are frozen and applied unchanged to
+real and surrogate counts, so the test measures whether recoverable
+information survives the surrogate and not whether a fresh model can
+adapt to it.
+
+\subsection{Gate C: readout-channel control}\label{sec:gatec}
+
+For each seed $s$, draw an independent zero-mean normal vector
+$\mathbf{w}^{\mathrm{rand}}_s$, center it, and rescale to
+$\|\mathbf{g}\|$ (RNG seed $4242$). Keep wiring, bias, drive and the
+fixed decision map; only the readout projection changes. If apparent
+tracking under the aligned channel survives randomization, it is
+substrate-independent; if it collapses to the dead floor, the apparent
+tracking depended on the readout alignment (whether the substrate
+activity \emph{also} contains readout-recoverable task information is
+asked separately by Gate D).
+
+\subsection{Decoders (Gates D and D\,bis)}\label{sec:decoders}
+
+On the \emph{same} recorded spike trains:
+\begin{enumerate}[nosep]
+\item \textbf{canon}--the fixed calibrated channel
+$k_{\mathrm{ro}}\,\mathbf{w}_r\!\cdot(\mathrm{counts}/C_W)$ +
+\texttt{decide} (Gate~B reference);
+\item \textbf{ridge}--cross-validated L2-regularized linear readout of
+population counts with $13$ lags on a log-grid in
+$[10^{-5},10]$, fit on interleaved train/val windows (every phase appears
+in every fold) solved via the Woodbury identity and verified against a
+direct solve (max $|\Delta|<4\times10^{-10}$; \texttt{verify\_ridge.py});
+\item \textbf{meanpd}--constant-predictor floor
+($\mathrm{var}$-around-run-mean);
+\item \textbf{passthru}--$\palt$ directly ($\RMSE=0$ by construction,
+the no-substrate ceiling);
+\item \textbf{mlp} (Gate D\,bis)--the fitted ridge readout plus a small
+one-hidden-layer tanh network ($2000\!\to\!32\!\to\!1$, L2, gradient
+clipping) trained on the ridge's train residual, with its own penalty
+selected on the validation split. This \emph{linear-skip residual} form
+starts exactly at the optimal linear readout, so a nonlinear gain is
+possible only if it generalizes on held-out windows; a larger net
+overfits (the split has only $\approx66$ train windows), which is itself
+a data-budget observation for a hub of this size.
+\end{enumerate}
+We report the \emph{RMSE improvement over the mean-predictor floor},
+\[
+\dfloor = \RMSE_{\mathrm{meanpd}}-\RMSE_{\mathrm{decoder}},
+\]
+taking the constant predictor as the zero-information baseline:
+positive values mean the decoder beats a constant. We deliberately avoid
+an information-unit name for $\dfloor$ because $-\RMSE$ is a loss, not
+an entropy; the reader should not read it as a bit or nat quantity.
+When comparing a living substrate to the dead null we use the
+difference-in-differences $\dfloor(\text{living})-\dfloor(\text{null})$
+so that any overfitting of the same decoder on independent spikes
+cancels.
+
+\subsection{Statistics and pseudo-replication}\label{sec:stats}
+
+The unit of replication is the \emph{seed} (wiring + initial state).
+Gate B/E pool $6$ seeds; Gate D pools $6$ seeds $\times$ $5$ profiles
+$=30$ runs, and is repeated at $n=20$ seeds. We report both per-seed
+outcomes (e.g.\ ``significant MI in $24/30$ runs'') and pooled means,
+and we flag seed-level counts rather than inflating $n$. This follows
+standard pseudo-replication guidance \cite{hurlbert1984}: the $200$
+windows within a run are not independent evidence. The seed-level test
+is an exact paired sign-permutation over the $20$ seeds
+(Section~\ref{sec:seeds20}); with $n=20$ its one-sided resolution floor
+is $\approx10^{-5}$ at $10^5$ permutations.
+
+\subsection{Eager statistics for Gate B}\label{sec:gatebstat}
+
+For the smallest $n$, we report the exact paired permutation over the
+$6$ seeds: a one-sided $p=1/64=0.0156$ and two-sided $p=2/64=0.03125$,
+with $6/6$ seeds in the same direction. We state the resolution
+explicitly rather than quoting deeper $p$-values than the design
+supports.
+
+\noindent
+\textbf{Experimental design at a glance.}
+\begin{table}[H]
+\centering
+\caption{The gates: what is changed, what is held fixed, and the
+question each gate answers. Gate~F (recurrence ablation) was a remark in
+v1 and is promoted here to a gate.}
+\label{tab:design}
+\small
+\begin{tabular}{@{}p{5.0em}p{11em}p{11em}p{16.5em}@{}}
+\toprule
+\textbf{Gate} & \textbf{Manipulation} & \textbf{Held fixed} &
+\textbf{Question} \\
+\midrule
+B (substrate
+swap) & dynamics $\to$ Poisson
+null with matched marginals
+& wiring, bias, drive,
+readout $\mathbf{w}_r=\mathbf{g}$, decision map
+& Does a task-independent
+dead substrate reproduce
+the score? \\
+B2 (paired
+null suite) & counts $\to$ sample-matched
+surrogate (circshift / blockshuffle /
+identityswap), $K=50$
+& wiring, drive, decision map;
+plus a dead-drive FP control and a
+fixed-weight readout-invariance test
+& Does the score survive
+surrogates of the substrate's
+\emph{own} activity, and is the
+test well-calibrated? \\
+C (channel
+ablation) & readout projection
+$\to$ per-seed random $\mathbf{w}_r^{\mathrm{rand}}$
+& wiring, drive, spikes,
+decision map
+& Does the apparent tracking
+survive breaking the aligned
+channel? \\
+D (readout
+re-learn) & decoder $\to$ cross-validated ridge on
+the \emph{same} spikes
+& spikes, task
+& Do the spike trains themselves
+contain readout-recoverable task
+information? \\
+D\,bis (nonlinear
+readout) & ridge $+$ small tanh MLP residual
+on the same spikes
+& spikes, task
+& How much does the linear
+readout hide? \\
+E (memory) & task $\to$ history-dependent
+(\texttt{lag}, \texttt{integ},
+\texttt{stair}); decoder on
+present-window state
+& spikes, dynamics, readout
+& Is task \emph{history} linearly
+decodable from the present
+population state? \\
+F (recurrence) & recurrence $\mathbf{W}\to0$
+(nohub), same readout
+& drive, readout, decision map
+& Does the tested recurrence
+contribute at all? \\
+\bottomrule
+\end{tabular}
+\end{table}
+Gates B/B2/C/D/D\,bis/F decompose one score into (substrate material)
+vs.\ (interface); Gate E sets the bar any memory claim must clear. All
+are run on the \emph{same} hub, seeds and profiles.
+
+\section{Results}\label{sec:results}
+
+\subsection{Gate B: substrate swap under a fixed readout}\label{sec:gateb}
+\begin{table}[H]
+\centering
+\caption{Gate B: per-profile $\widehat{\RMSE}$, $\MI$ (nats), $\rho$
+and $\TE$-significance under the fixed calibrated readout (5 profiles,
+6 seeds). ``msd'' is the across-seed mean.}
+\label{tab:gateb}
+\input{tables/tab_gateb.tex}
+\end{table}
+Under the fixed calibrated readout, LIF and IZH both beat the matched
+dead null on every task-varying profile (Table~\ref{tab:gateb}).
+The dead null stays at $\MI\approx0$ and $\rho\approx0$; its $\TE$ is
+zero under the trial-shuffle estimator at every profile and seed. On
+$\mathtt{baseline}$ (constant input) \emph{no} substrate carries
+information, as expected. Taken alone, Gate~B would read as ``the
+neural substrates compute''---this is precisely the reading that Gates
+B2, C and D correct.
+
+\subsection{Gate B2: paired null suite, calibration and invariance}\label{sec:gateb2res}
+\begin{table}[H]
+\centering
+\caption{Gate B2: per substrate and surrogate type, the number of
+task-varying cells (profiles $\times$ seeds) with surrogate $p\le0.05$
+out of $54$, at $K=50$ paired surrogates per cell. The identity-swap
+null preserves the exact per-window population envelope.}
+\label{tab:gateb2}
+\input{tables/tab_gateb2.tex}
+\end{table}
+The observed MI is above its own sample-matched surrogates in
+$54/54$ task-varying cells for \emph{each} of the three null types and
+\emph{both} living substrates (Table~\ref{tab:gateb2}), so the effect is
+not an artifact of the i.i.d.\ Poisson assumption. The identity-swap
+surrogate is the sharpest check: it keeps every window's population
+counts exactly and only destroys the neuron-to-task alignment, yet the
+MI still collapses. The dead-drive false-positive control
+(\texttt{drive\_gain}=0, no task signal, three profiles $\times$ six
+seeds $\times$ two substrates) yields \emph{zero} significant cells, so
+the surrogate test is well-calibrated at this sample size. Finally,
+freezing the ridge weights learned on the real spikes and applying them
+unchanged to the surrogates leaves the task MI above the surrogate
+distribution in $12/12$ seed--substrate cells at the resolution of the
+null sample ($p=0.0476$); because nothing is refit, this is a statement
+about surviving information rather than about model adaptability. The
+three criteria---null suite, false-positive control, fixed-weight
+invariance---are all met (verdict \textsc{pass}).
+
+\subsection{Gate C: does the channel carry it?}\label{sec:gatecres}
+\begin{table}[H]
+\centering
+\caption{Gate C: canonical $\RMSE$ under the aligned channel
+($\mathbf{w}_r=\mathbf{g}$) vs.\ per-seed random readouts. ``$d$'' is
+$\RMSE_{\mathrm{random}}-\RMSE_{\mathrm{aligned}}$; ``paired'' is the
+fraction of seeds with $d>0$. Both living substrates collapse
+(3/3 seeds); the matched dead null is unaffected.}
+\label{tab:gatec}
+\input{tables/tab_gatec.tex}
+\end{table}
+Randomizing the readout projection collapses \emph{both} living
+substrates toward the dead floor: mean $\RMSE$ jumps from $0.12$---$0.30$
+(aligned) to $0.36$---$0.41$ (randomized), in all three evaluated seeds
+per profile (Table~\ref{tab:gatec}). The matched dead null is
+unaffected ($\Delta=0.000$, $0/3$ seeds). Gate C therefore shows that
+performance under the fixed decision map \emph{depends critically on
+the alignment of the readout projection} with the input projection.
+It does not by itself say the substrate is empty: a poor channel could
+also fail to expose genuinely present substrate information. Gate D
+settles that direction---whether the underlying spike trains retain
+readout-recoverable task information---by re-learning the readout on the
+same spikes.
+
+\subsection{Gate D: the readout decides who looks like it computes}\label{sec:gatedres}
+\begin{table}[H]
+\centering
+\caption{Gate D: same spikes, decoder sweep (pooled 5 profiles
+$\times$ 6 seeds). $\dfloor=$ $\RMSE_{\mathrm{meanpd}}-
+\RMSE_{\mathrm{decoder}}$ is the RMSE improvement over the
+mean-predictor (no-information) floor; $\MI$ in nats;
+$\MI_{\mathrm{sig}}$ is the fraction of runs with significant $\MI$.}
+\label{tab:gated}
+\input{tables/tab_gated.tex}
+\end{table}
+Table~\ref{tab:gated}: a cross-validated ridge readout of
+\emph{the same spikes} splits the substrates:
+\begin{itemize}[nosep]
+\item \textbf{LIF}: $\RMSE$ drops to $0.055$---the fixed channel had
+left information on the table (canon-to-ridge gap $+0.113$)---and the
+spikes carry the task: $\dfloor=+0.094$, $\MI$ significant in
+$24/30$ runs.
+\item \textbf{Izhikevich}: the fixed-channel ``tracking'' does
+\emph{not} persist: ridge collapses to $0.157$, $\dfloor\approx0$
+($-0.008$), $\MI$ significant in $23/30$ runs but at about a quarter
+of the LIF rate. The Gate~B IZH gap was a readout-channel artifact
+(confirmed by Gate~C).
+\item \textbf{Dead null}: ridge $0.158\approx$ floor, $\MI\approx0$
+(frac.\ $0.03$)---the matched null remains at the floor under the
+cross-validated ridge readout \cite{hoerl1970,paninski2004}.
+\end{itemize}
+
+\subsection{Gate D\,bis: does a nonlinear readout change the verdict?}\label{sec:gatedbis}
+\begin{table}[H]
+\centering
+\caption{Gate D\,bis: same spikes and splits as Gate D, with a small
+MLP residual readout on top of the cross-validated ridge. $\dfloor$
+is the improvement over the mean-predictor floor; ``MI-sig'' is the
+fraction of runs with significant $\MI$ (30 runs).}
+\label{tab:mlp}
+\input{tables/tab_mlp.tex}
+\end{table}
+A reviewer objection to linear readouts is that the best linear decoder
+may hide task information that a nonlinear one would recover. We test
+this directly: the MLP starts from the optimal linear readout and adds a
+regularized nonlinear correction. Table~\ref{tab:mlp} shows the verdict
+is essentially unchanged. LIF's $\dfloor$ moves only from $+0.094$ to
+$+0.105$ (relative to the dead null, $+0.103$ to $+0.114$): the
+nonlinearity is neither needed nor harmful. IZH gains a small amount
+(from $\approx0$ to $+0.012$ vs.\ the null $+0.021$), still far below
+LIF and consistent with the interpretation that IZH's fixed-channel
+tracking is mostly a readout-channel artifact. The dead null stays at
+the floor ($\dfloor=-0.009$; significant $\MI$ in $1/30$ runs). We
+therefore report the linear readout as the conservative comparison and
+treat the MLP as a bound, not as a new positive claim.
+
+\subsection{Gate E: is there memory?}\label{sec:gateeres}
+\begin{table}[H]
+\centering
+\caption{Gate E: RMSE improvement over the mean-predictor floor,
+$\dfloor$\ (ridge minus floor), per profile, plus the input-only
+8-tap FIR reference (positive \emph{floor} values).}
+\label{tab:gatee}
+\input{tables/tab_gatee.tex}
+\end{table}
+Negative result. Three history-dependent tasks (\texttt{lag}:
+4-window delayed reference; \texttt{integ}: running integral over
+$8$ windows; \texttt{stair}: staircase-level switch) decoded by the
+ridge on present-window spikes vs.\ an $8$-tap FIR over the input only.
+$\dfloor$ is negative for every substrate
+(LIF $-0.13$, IZH $-0.06$, null $-0.006$), while the input-FIR solves
+the linearly recoverable ones ($+0.15$). Conclusion: no substrate shows
+\emph{linearly decodable task history} in the present-window population
+state. Memory is not certified here; functional memory must be
+demonstrated in the closed loop, where previous activity feeds back
+into the input \cite{carmena2003,nicolelis2003}.
+
+\subsection{Gate F: recurrence ablation}\label{sec:gatef}
+
+Section~\ref{sec:gatedres} reported that dropping recurrence
+($w$ ignored) leaves the canonical RMSE unchanged. We promote this to a
+gate. At $n=6$ seeds, nohub and canon agree for LIF to $<10^{-4}$
+($0.1678$ vs.\ $0.1678$) and for IZH to $\approx10^{-3}$ ($0.2388$
+vs.\ $0.2390$); at $n=20$ seeds the pooled gap is $-3.3\times10^{-5}$
+(LIF) and $+3.5\times10^{-4}$ (IZH), i.e.\ below the resolution of the
+measurement. Under the wiring and drive used here, the tested
+recurrence contributes negligibly to the measured canonical RMSE, so
+none of the above is a recurrence artifact. This is a statement about
+\emph{this} hub at \emph{this} operating point, not a general claim
+that recurrence is computationally inert.
+
+\subsection{Seed-level statistics at $n=20$}\label{sec:seeds20}
+\begin{table}[H]
+\centering
+\caption{Seed-level paired test at $n=20$ seeds. For each seed we pool
+the gain-in-$\dfloor$ of the living substrate over the dead null across
+the five profiles, then run an exact paired sign-permutation over the
+$20$ seeds ($10^5$ permutations).}
+\label{tab:seeds20}
+\input{tables/tab_seeds20.tex}
+\end{table}
+To address the small-$n$ concern directly, we reran Gate D at
+$n=20$ seeds (the six canonical seeds plus fourteen new ones) with an
+exact seed-level paired permutation test (Table~\ref{tab:seeds20}). LIF
+is decisive: the mean effect over the null is $+0.103$ with $20/20$
+seeds in the same direction ($p\approx10^{-5}$, the permutation
+resolution floor). IZH is qualitatively different: a small $+0.008$
+mean effect, $16/20$ seeds in the same direction
+($p\approx3.6\times10^{-3}$). The pooled canonical RMSE at $n=20$ is
+essentially identical to the $n=6$ battery
+(LIF $0.167$ vs.\ $0.168$; IZH $0.239$ vs.\ $0.239$; ridge LIF $0.058$
+vs.\ $0.055$; ridge IZH $0.153$ vs.\ $0.158$), and the dead null stays
+dead (significant $\MI$ in $5\%$ of runs). We therefore report both
+samplings and do not inflate the effective sample size.
+
+\subsection{Verification}\label{sec:verify}
+Four independent checks confirm the results are not implementation
+artifacts:
+\begin{itemize}[nosep]
+\item \texttt{verify\_ridge.py}---Woodbury ridge equals a direct
+least-squares solve (max $|\Delta|<4\times10^{-10}$): Gate~D numbers
+are the solver's, not the optimization's;
+\item \texttt{verify\_null.py}---matched dead null on two out-of-family
+seeds $\{103,201\}$: $\MI=0$, $\TE=0$, $\rho=0$ exactly;
+\item \texttt{verify\_wr.py}---per-seed independent random readouts
+($\|\mathbf{w}^{\mathrm{rand}}\|=\|\mathbf{g}\|$, RNG $4242$): the
+randomization used in Gate~C, verified against the aligned baseline
+and the null;
+\item \texttt{verify\_paper\_numbers.py}---every number quoted in this
+v2 is re-derived from the JSON artifacts and the build fails on any
+mismatch (see Section~\ref{sec:repro}).
+\end{itemize}
+
+\section{Discussion}\label{sec:discussion}
+
+\subsection{The matched dead substrate is the falsification
+anchor}\label{sec:disc1}
+
+A scoreboard is necessary but not sufficient. Every number in
+Gate~B that looks like ``computation'' is preceded by the two-line
+question: \emph{does an independent Poisson process with the same
+marginal rates do it too?} When it does not, the material deserves a
+closer look; when it does, nothing follows about the substrate. Gate~B2
+sharpens this with surrogate tests built from the substrate's own spike
+train: the effect survives samples that preserve its marginals, its
+short-range structure, and even its per-window population envelope, but
+not their task alignment. The matched null is cheap (a rate estimate
+plus a surrogate generator) and it should precede scoreboard
+comparisons in the embodied-AI literature
+\cite{kagan2022dishbrain,balci2023neurons,lukosevicius2009,
+wringe2025rc}.
+
+\subsection{Readout robustness, not invariance, is the substantive test}\label{sec:disc2}
+
+Gate~C makes the channel visible by breaking it: both living
+substrates collapse when $\mathbf{w}_r$ stops matching $\mathbf{g}$.
+Gate~D then asks whether a readout \emph{trained} on the same spikes
+can recover the task: LIF survives ($\dfloor=+0.094$), IZH does not
+($\dfloor=-0.008$). Gate~D\,bis shows a nonlinear readout does not
+change the picture (LIF $+0.105$, IZH $+0.012$). Readout choice is
+therefore a substantive modeling decision, not a detail. Claims like
+``this material computes $\phi$'' must be re-read as ``this material's
+spike statistics, \emph{via} some channel, contain readout-recoverable
+task-relevant structure,'' and the channel must be shown to be
+redundant---or the claim collapses to a statement about the interface,
+exactly the misreading flagged in the DishBrain correspondence
+\cite{balci2023neurons}. We use \emph{robustness} rather than
+\emph{invariance} because our readouts are still a family of linear (and
+one small nonlinear) models; nothing here shows invariance to arbitrary
+readouts.
+
+\subsection{What we are not claiming}\label{sec:disc3}
+
+The measured canonical $\RMSE$ is unaffected by dropping the recurrent
+connections (Gate~F); the tested recurrence contributes negligibly to
+the results, and Gate E is negative, so no statement here concerns
+memory. None of the numbers is a closed-loop result. A closed-loop
+falsification battery is left to future work (\S\ref{sec:disc5}); this
+note's protocol is the \emph{open-loop instrument} that any closed-loop
+claim should first pass. Only LIF of the three materials survives the
+readout controls as a carrier of task information, and only for the
+rate-code tasks.
+
+\subsection{Limits}\label{sec:disc4}
+
+(i) The linear readout is now complemented by a small nonlinear readout
+(Gate D\,bis), but not by a large network or a population model; our
+nonlinear bound is deliberately weak, and larger decoders would need
+more data than the $\approx66$ windows per split that the hub provides.
+(ii) The matched null is \emph{single-neuron} marginal for Gate B and
+sample-matched for Gate B2; a null matching pairwise \emph{correlations}
+across neurons would be a still stronger structure test.
+(iii) Gate C randomizes one projection; joint randomization of wiring
+and channel is a stronger ablation. (iv) The $6$-seed battery bounds the
+exact paired permutation resolution at $1/64$; we report the $n=20$
+seed-level test alongside it and keep per-seed reporting honest
+\cite{hurlbert1984}. (v) All results are for this hub at this operating
+point; the protocol transfers, the numbers do not.
+
+\subsection{Future work}\label{sec:disc5}
+
+Three directions follow directly: (a) a second hub architecture (e.g.\
+different $N$, $p_{\mathrm{re}}$, or decision map) to test whether the
+substrate ranking is architecture-bound; (b) a structure-matching null
+with pairwise correlations to test substrate \emph{structure} rather
+than rates; (c) replaying the \emph{real} closed-loop data through the
+same gates, converting this open-loop instrument into a closed-loop
+falsification battery \cite{carmena2003,embodied_neurocomp}.
+
+\section{Reproducibility and data}\label{sec:repro}
+\begin{itemize}[nosep]
+\item Code: \path{sandbox/} git repo; Gates B/B2/C/D/D\,bis/E/F runners
+(\path{gate_b/run.py}, \path{04_p2/gate_b2/run3.py}, \path{gate_d/run.py},
+\path{gate_d/run_mlp.py}, \path{gate_d/run_20seeds.py},
+\path{gate_e/run.py}) print JSON summaries into their \path{results/};
+tables/figures are \emph{generated} from those JSON artifacts by
+\path{build_figures_tables.py} (no hand-typed numbers).
+\item Gate C: \path{verify/verify_wr.py} (per-seed random readouts,
+RNG $4242$) writes \path{verify_wr_summary.json}.
+\item Gate D at $n=20$: \path{gate_d/run_20seeds.py} writes
+\path{gate_d/results20/gate_d_summary.json} and
+\path{gate_d20_seed_stats.json}; the $6$-seed artifacts are untouched.
+Gate D\,bis: \path{gate_d/run_mlp.py} writes
+\path{gate_d/results/mlp/mlp_summary.json}.
+\item Number audit: \path{verify/verify_paper_numbers.py} re-derives the
+quoted values from the JSON artifacts and exits non-zero on any
+mismatch.
+\item Environment: Python \SI{3.12}{}, numpy \SI{2.5}{},
+matplotlib; venv at \path{02\_cl/.venv312/}; \path{requirements.txt}
+pins versions.
+\item Scope: this note's claims rest on Gates B/B2/C/D/D\,bis/E/F only
+(all artifacts above). A companion closed-loop battery lives in the
+separate \texttt{surrogate\_cl/} repository; it is \emph{not}
+regenerated here and none of the results in this note depend on it
+\cite{embodied_neurocomp}.
+\item Build note: this v2 compiled with MiKTeX (`pdflatex`); no
+Overleaf-only packages.
+\end{itemize}
+
+\bibliographystyle{unsrt}
+\begin{thebibliography}{99}
+
+\bibitem{embodied_neurocomp}
+J.~Zhou, D.~Tanneberg, F.~Habibollahi, A.~Loeffler, K.~Lawson,
+V.~Baccetti, \emph{et al.}, ``Embodied Neurocomputation: A Framework for
+Interfacing Biological Neural Cultures with Scaled Task-Driven
+Validation,'' preprint, arXiv:2605.13315, 2026.
+
+\bibitem{kagan2022dishbrain}
+B.~J.~Kagan \emph{et al.}, ``In vitro neurons learn and exhibit
+sentience when embodied in a simulated game-world,'' \emph{Neuron}
+110(22), 3952--3969, 2022.
+
+\bibitem{balci2023neurons}
+F.~Balc{\i}, S.~Ben~Hamed, T.~Boraud, S.~Bouret, T.~Brochier,
+C.~Brun, \emph{et al.}, ``A response to claims of emergent
+intelligence and sentience in a dish,'' \emph{Neuron} 111(5),
+604--605, 2023.
+
+\bibitem{kagan2023semantics}
+B.~J.~Kagan \emph{et al.}, ``Scientific communication and the
+semantics of sentience,'' \emph{Neuron} 111(5), 2023. [letter]
+
+\bibitem{smirnova2023organoid}
+L.~Smirnova, B.~S.~Caffo, D.~H.~Gracias, Q.~Huang, I.~E.~Morales
+Pantoja, \emph{et al.}, ``Organoid intelligence (OI): the new frontier
+in biocomputing and intelligence-in-a-dish,'' \emph{Frontiers in
+Science} 1, 1017235, 2023.
+
+\bibitem{brooks1991}
+R.~A.~Brooks, ``Intelligence without representation,''
+\emph{Artificial Intelligence} 47, 139--159, 1991.
+
+\bibitem{pfeifer2006how}
+R.~Pfeifer and J.~Bongard, \emph{How the Body Shapes the Way We
+Think: A New View of Intelligence}, MIT Press, 2006.
+
+\bibitem{dangelo2026benchmark}
+G.~D'Angelo, J.~E.~Pedersen, T.~Hassan, \emph{et al.}, ``A benchmarking
+framework for embodied neuromorphic agents,'' \emph{Nature Machine
+Intelligence} 8, 300--312, 2026.
+
+\bibitem{bartolozzi2022embodied}
+C.~Bartolozzi, G.~Indiveri, and E.~Donati, ``Embodied neuromorphic
+intelligence,'' \emph{Nature Communications} 13, 1024, 2022.
+
+\bibitem{neurobench2025}
+J.~Yik, K.~Van~den~Berghe, D.~den~Blanken, \emph{et al.}, ``The
+NeuroBench framework for benchmarking neuromorphic computing algorithms
+and systems,'' \emph{Nature Communications} 16, 1545, 2025.
+
+\bibitem{maass1997}
+W.~Maass, ``Networks of spiking neurons: the third generation of
+neural network models,'' \emph{Neural Networks} 10(9), 1659--1671,
+1997.
+
+\bibitem{izhikevich2003}
+E.~M.~Izhikevich, ``Simple model of spiking neurons,''
+\emph{IEEE Trans.\ Neural Networks} 14(6), 1569--1572, 2003.
+
+\bibitem{izhikevich2004}
+E.~M.~Izhikevich, ``Which model to use for cortical spiking
+neurons?'' \emph{IEEE Trans.\ Neural Networks} 15(5), 1063--1070,
+2004.
+
+\bibitem{gerstner2002}
+W.~Gerstner and W.~M.~Kistler, \emph{Spiking Neuron Models: Single
+Neurons, Populations, Plasticity}, Cambridge University Press, 2002.
+
+\bibitem{maass2002liquid}
+W.~Maass, T.~Natschlaeger, and H.~Markram, ``Real-time computing
+without stable states: a new framework for neural computation based
+on perturbations,'' \emph{Neural Computation} 14(11), 2531--2560,
+2002.
+
+\bibitem{jaeger2001echo}
+H.~Jaeger, ``The echo state approach to analysing and training
+recurrent neural networks,'' GMD-Report 148, 2001.
+
+\bibitem{lukosevicius2009}
+M.~Lukosevicius and H.~Jaeger, ``Reservoir computing approaches to
+recurrent neural network training,'' \emph{Computer Science Review}
+3(3), 127--149, 2009.
+
+\bibitem{wringe2025rc}
+C.~Wringe, M.~Trefzer, and S.~Stepney, ``Reservoir computing
+benchmarks: a tutorial review and critique,'' \emph{International
+Journal of Parallel, Emergent and Distributed Systems} 40(4),
+313--351, 2025.
+
+\bibitem{yan2024rc}
+M.~Yan, C.~Huang, P.~Bienstman, P.~Ti{\v n}o, W.~Lin, and J.~Sun,
+``Emerging opportunities and challenges for the future of reservoir
+computing,'' \emph{Nature Communications} 15, 2056, 2024.
+
+\bibitem{steinmetz2019}
+N.~A.~Steinmetz, P.~Zatka-Haas, M.~Carandini, and K.~D.~Harris,
+``Distributed coding of choice, action and engagement across the mouse
+brain,'' \emph{Nature} 576, 266--273, 2019.
+
+\bibitem{shannon1948}
+C.~E.~Shannon, ``A mathematical theory of communication,''
+\emph{Bell System Technical Journal} 27, 379--423, 1948.
+
+\bibitem{kraskov2004}
+A.~Kraskov, H.~St{\"o}gbauer, and P.~Grassberger, ``Estimating
+mutual information,'' \emph{Phys.\ Rev.\ E} 69, 066138, 2004.
+
+\bibitem{panzeri2007}
+S.~Panzeri, R.~Senatore, M.~A.~Montemurro, and R.~S.~Petersen,
+``Correcting for the sampling bias in spike-train information
+measures,'' \emph{J.\ Neurophysiology} 98, 1064--1072, 2007.
+
+\bibitem{schreiber2000}
+T.~Schreiber, ``Measuring information transfer,''
+\emph{Phys.\ Rev.\ Lett.} 85(2), 461--464, 2000.
+
+\bibitem{walker2018}
+B.~L.~Walker and K.~A.~Newhall, ``Inferring information flow in
+spike-train data sets using a trial-shuffle method,'' \emph{PLoS
+ONE} 13(11), e0206977, 2018.
+
+\bibitem{theiler1992}
+J.~Theiler, S.~Eubank, A.~Longtin, B.~Galdrikian, and J.~D.~Farmer,
+``Testing for nonlinearity in time series: the method of surrogate
+data,'' \emph{Physica D} 58, 77--94, 1992.
+
+\bibitem{ernst2004}
+M.~D.~Ernst, ``Permutation methods: a basis for exact inference,''
+\emph{Statistical Science} 19(4), 676--685, 2004.
+
+\bibitem{hurlbert1984}
+S.~H.~Hurlbert, ``Pseudoreplication and the design of ecological
+field experiments,'' \emph{Ecological Monographs} 54(2), 187--211,
+1984.
+
+\bibitem{georgopoulos1986}
+A.~P.~Georgopoulos, A.~B.~Schwartz, and R.~E.~Kettner, ``Neuronal
+population coding of movement direction,'' \emph{Science} 233,
+1416--1419, 1986.
+
+\bibitem{quiroga2009}
+R.~Q.~Quiroga and S.~Panzeri, ``Extracting information from
+neuronal populations: information theory and decoding approaches,''
+\emph{Nature Reviews Neuroscience} 10, 173--185, 2009.
+
+\bibitem{paninski2004}
+L.~Paninski \emph{et al.}, ``Superlinear population encoding of
+dynamic hand trajectory in primary motor cortex,''
+\emph{J.\ Neuroscience} 24(39), 8551--8561, 2004.
+
+\bibitem{hoerl1970}
+A.~E.~Hoerl and R.~W.~Kennard, ``Ridge regression: biased
+estimation for nonorthogonal problems,'' \emph{Technometrics} 12,
+55--67, 1970.
+
+\bibitem{carmena2003}
+J.~M.~Carmena \emph{et al.}, ``Learning to control a brain--machine
+interface for reaching and grasping by primates,''
+\emph{PLoS Biology} 1(2), e42, 2003.
+
+\bibitem{nicolelis2003}
+M.~A.~L.~Nicolelis, ``Brain--machine interfaces to restore motor
+function and probe neural circuits,'' \emph{Nature Reviews
+Neuroscience} 4, 417--422, 2003.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,14 @@
+% TABLA Gateway D-bis: readout no-lineal (MLP 2000->32->1, L2) sobre
+% las MISMAS spikes de Gate D; carried_info=meanpd_rmse-rmse_decoder.
+% desde gate_d/results/mlp/mlp_summary.json
+\begin{tabular}{lrrrr}
+\toprule
+substrate & $\dfloor$ linear & $\dfloor$ MLP & MI-sig linear & MI-sig MLP \\
+\midrule
+LIF & 0.094 & 0.105 & 0.800 & 0.800 \\
+Izhikevich & -0.008 & 0.012 & 0.767 & 0.800 \\
+Poisson (dead null) & -0.009 & -0.009 & 0.033 & 0.033 \\
+\bottomrule
+\end{tabular}
+% MLP = ridge skip + 32-unit tanh residual net (L2, grad-clip,
+% lam in {1e-3,1e-2,1e-1,1}, selected on validation).

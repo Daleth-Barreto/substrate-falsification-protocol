@@ -68,6 +68,9 @@ def main():
     gd_raw = load_raw_gated()
     ge = load("gate_e/results/gate_e_summary.json")
     gcw = load("verify/verify_wr_summary.json")
+    gb2 = load("gate_b2v2_summary.json", root=os.path.join(HERE, "..", "04_p2", "gate_b2", "results"))
+    mlp = load("mlp/mlp_summary.json", root=os.path.join(HERE, "gate_d", "results"))
+    s20 = load("gate_d20_seed_stats.json", root=os.path.join(HERE, "gate_d", "results20"))
     canonical = load("../../surrogate_cl/results/task_tracking.json")
 
     # ------------------------------------------------------------------ figure
@@ -270,8 +273,85 @@ def main():
             f"\\newcommand{{\\canDzMask}}{{{st['neural_vs_mask0.5']['cohen_dz']:.2f}}}\n"
         )
 
+    # ---- Tab. 5 — Gate B2 null suite (paired population nulls, FP control,
+    #      readout invariance). Canonical evidence for paper v2.
+    tab = []
+    tab.append("% TABLA Gateway B2: null-suite emparejada (circshift/blockshuffle/")
+    tab.append("% identityswap), K=50 por cell; FP control y readout-invariance.")
+    tab.append("% desde 04_p2/gate_b2/results/gate_b2v2_summary.json (read-only)")
+    tab.append("\\begin{tabular}{llrrr}")
+    tab.append("\\toprule")
+    tab.append("null type & substrate & sig MI cells & total & frac. \\\\")
+    tab.append("\\midrule")
+    for nt in gb2["null_types"]:
+        for sn in ("lif", "izh"):
+            d = gb2["pooled"][sn][nt]
+            tab.append(" & ".join([
+                f"\\texttt{{{nt}}}", SUB_LABEL[sn],
+                f"{d['signif_l05_n']}", f"{d['n_cells']}",
+                f"{d['signif_l05_frac']:.2f}",
+            ]) + r" \\")
+    tab.append("\\bottomrule")
+    tab.append("\\end{tabular}")
+    tab.append("")
+    tab.append("% FP control (drive_gain=0, no task signal): cells per profile =")
+    tab.append(f"% {json.dumps(gb2['false_positive_control']['significant_cells'])} "
+               f"| criterion fp_control_clean={gb2['criteria']['fp_control_clean']}.")
+    rid_n = sum(len(v) for v in gb2["ridge_invariance"].values())
+    rid_p = gb2["ridge_invariance"]["lif"][0]["p_ridge"]
+    tab.append(f"% Readout invariance (fixed weights): {rid_n}/{rid_n} cells, "
+               f"p={rid_p:.4f}.")
+    write_tab("tab_gateb2.tex", tab)
+
+    # ---- Tab. 6 — Gate D bis: linear vs nonlinear (MLP) readout on the same spikes
+    tab = []
+    tab.append("% TABLA Gateway D-bis: readout no-lineal (MLP 2000->32->1, L2) sobre")
+    tab.append("% las MISMAS spikes de Gate D; carried_info=meanpd_rmse-rmse_decoder.")
+    tab.append("% desde gate_d/results/mlp/mlp_summary.json")
+    tab.append("\\begin{tabular}{lrrrr}")
+    tab.append("\\toprule")
+    tab.append("substrate & $\\dfloor$ linear & $\\dfloor$ MLP & "
+               "MI-sig linear & MI-sig MLP \\\\")
+    tab.append("\\midrule")
+    for sn in SUBSTRATES:
+        p = mlp["pooled"][sn]
+        tab.append(" & ".join([
+            SUB_LABEL[sn],
+            fmt3(p["carried_info"]),
+            fmt3(p["carried_info_mlp"]),
+            fmt3(p.get("ridge_mi_sig_frac", 0.0)),
+            fmt3(p.get("mlp_mi_sig_frac", 0.0)),
+        ]) + r" \\")
+    tab.append("\\bottomrule")
+    tab.append("\\end{tabular}")
+    tab.append("% MLP = ridge skip + 32-unit tanh residual net (L2, grad-clip,")
+    tab.append("% lam in {1e-3,1e-2,1e-1,1}, selected on validation).")
+    write_tab("tab_mlp.tex", tab)
+
+    # ---- Tab. 7 — n=20 seeds seed-level paired statistics (Gate D repetition)
+    tab = []
+    tab.append("% TABLA seed-level n=20: efecto vs null Poisson por seed (pooled 5")
+    tab.append("% perfiles), permutation emparejada exacta.")
+    tab.append("% desde gate_d/results20/gate_d20_seed_stats.json")
+    tab.append("\\begin{tabular}{lrrrr}")
+    tab.append("\\toprule")
+    tab.append("substrate & $\\Delta$ (vs null) & SE & paired perm $p$ & "
+               "seeds same dir \\\\")
+    tab.append("\\midrule")
+    for sn in ("lif", "izh"):
+        d = s20[sn]
+        tab.append(" & ".join([
+            SUB_LABEL[sn], fmt3(d["mean_effect_vs_poisson"]), fmt3(d["se_effect"]),
+            f"{d['paired_perm_p_one_sided']:.4g}",
+            f"{d['seeds_same_direction']}/{d['n_seeds']}",
+        ]) + r" \\")
+    tab.append("\\bottomrule")
+    tab.append("\\end{tabular}")
+    write_tab("tab_seeds20.tex", tab)
+
     print("WROTE figures: decoder_bars.png, canonical.png (+ATTRIBUTION)")
-    print("WROTE tables: tab_results.tex, canonical_numbers.tex")
+    print("WROTE tables: tab_results.tex, canonical_numbers.tex, "
+          "tab_gateb2.tex, tab_mlp.tex, tab_seeds20.tex")
 
 
 if __name__ == "__main__":
