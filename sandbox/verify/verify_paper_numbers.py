@@ -14,6 +14,7 @@ Usage:
 
 import json
 import os
+import re
 import sys
 
 import numpy as np
@@ -211,6 +212,31 @@ def run(A):
     check("GateG archB IZH canon RMSE", 0.242, bB["canon_rmse_izh"], 5e-4)
     check_eq("GateG ranking reproduces", True,
              ab["criteria_B"]["ranking_reproduces"])
+
+    # ---- NC port consistency (main_v2.tex -> main_nc_v2.tex) ----------
+    p_v2 = os.path.join(SB, "paper", "main_v2.tex")
+    p_nc = os.path.join(SB, "paper", "main_nc_v2.tex")
+    with open(p_v2, encoding="utf-8") as f:
+        v2 = f.read()
+    with open(p_nc, encoding="utf-8") as f:
+        nc = f.read()
+
+    def labels(s):
+        return sorted(set(re.findall(r"\\label\{([^}]+)\}", s)))
+
+    check_eq("NC port keeps all labels", labels(v2), labels(nc))
+    check_eq("NC port has no \\cite", 0, nc.count("\\cite{"))
+    check_eq("NC port has no \\path", 0, nc.count("\\path{"))
+    check_eq("NC port has no inlined \\input", 0, nc.count("\\input{tables/"))
+    check_eq("NC port has no numbered bibliography", 0,
+             nc.count("\\begin{thebibliography}"))
+    sys.path.insert(0, os.path.join(SB, "paper"))
+    import make_nc_v2
+    bib_keys = set(re.findall(r"\\bibitem\{([^}]+)\}", v2))
+    check_eq("NC port cite-map covers all bibitems",
+             sorted(bib_keys), sorted(make_nc_v2.CITE))
+    check_eq("NC port reference count matches bibitems",
+             len(bib_keys), len(make_nc_v2.REFS))
 
     # ---- verdicts ------------------------------------------------------
     check_eq("Gate B verdict", "PASS", b["verdict"])
