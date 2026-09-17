@@ -1,0 +1,52 @@
+{
+  "architecture_A": {
+    "N": 2000,
+    "canon_rmse_izh": 0.23895667523364553,
+    "canon_rmse_lif": 0.16780690053487343,
+    "izh_carried_info": -0.008041357187396708,
+    "izh_ridge_mi_sig_frac": 0.7666666666666667,
+    "izh_ridge_rmse": 0.1574820682422366,
+    "lif_carried_info": 0.09445223495765767,
+    "lif_ridge_mi_sig_frac": 0.8,
+    "lif_ridge_rmse": 0.05498847609718221,
+    "null_carried_info": -0.009008628683264686,
+    "null_ridge_mi_sig_frac": 0.03333333333333333,
+    "p_re": 0.01
+  },
+  "architecture_B": {
+    "N": 4000,
+    "P_RE": 0.02,
+    "canon_rmse_izh": 0.24152332312638278,
+    "canon_rmse_lif": 0.16476218662064274,
+    "izh_carried_info": 0.00025839814009262496,
+    "izh_ridge_mi_sig_frac": 0.8,
+    "izh_ridge_rmse": 0.14918231291474726,
+    "lif_carried_info": 0.10079735096252852,
+    "lif_ridge_mi_sig_frac": 0.8,
+    "lif_ridge_rmse": 0.048643360092311363,
+    "null_carried_info": -0.003603229379486983,
+    "null_ridge_mi_sig_frac": 0.06666666666666667
+  },
+  "criteria_B": {
+    "izh_weak": true,
+    "lif_real": true,
+    "null_dead": true,
+    "ranking_reproduces": true
+  },
+  "profiles": [
+    "baseline",
+    "multi_step",
+    "sine",
+    "descend",
+    "pulse"
+  ],
+  "seeds": [
+    1,
+    7,
+    13,
+    29,
+    55,
+    91
+  ],
+  "verdict": "architecture B (N=4000, p_re=0.02): LIF info-over-null +0.104, IZH +0.004, null floor -0.004; ranking reproduces=True."
+}

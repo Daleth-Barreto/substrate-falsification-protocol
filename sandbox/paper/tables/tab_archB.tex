@@ -1,0 +1,14 @@
+% TABLA arquitectura B: misma bateria Gate D (5 perfiles x 6
+% seeds) sobre un segundo hub N=4000, p_re=0.02.
+% desde gate_d/results_archB/archB_summary.json (A = v1 N=2000)
+\begin{tabular}{llrrr}
+\toprule
+architecture & substrate & $\dfloor$ & info$-$null & MI-sig \\
+\midrule
+A ($N{=}2000$, $p_{\mathrm{re}}{=}0.01$) & LIF & 0.094 & 0.103 & 0.800 \\
+A ($N{=}2000$, $p_{\mathrm{re}}{=}0.01$) & Izhikevich & -0.008 & 0.001 & 0.767 \\
+B ($N{=}4000$, $p_{\mathrm{re}}{=}0.02$) & LIF & 0.101 & 0.104 & 0.800 \\
+B ($N{=}4000$, $p_{\mathrm{re}}{=}0.02$) & Izhikevich & 0.000 & 0.004 & 0.800 \\
+\bottomrule
+\end{tabular}
+% criteria_B: {"izh_weak": true, "lif_real": true, "null_dead": true, "ranking_reproduces": true}.

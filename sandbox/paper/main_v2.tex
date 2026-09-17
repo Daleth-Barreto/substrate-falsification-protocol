@@ -89,7 +89,10 @@ same IZH spikes leaves RMSE essentially at the floor
 only a small amount ($+0.012$, $16/20$ seeds same direction). None of the
 substrates shows linearly decodable history in the present-window
 population state (Gate E negative), so memory claims are not certified
-here. We conclude: (i) matched dead-substrate controls for the
+here. The ranking is not architecture-bound: a second hub
+($N=4000$, $p_{\mathrm{re}}=0.02$) reproduces it (LIF $+0.104$ vs.\ IZH
+$+0.004$ over the dead null). We conclude: (i) matched dead-substrate
+controls for the
 \emph{material} of a substrate are cheap, decisive, and should precede
 scoreboard comparisons; (ii) readout \emph{robustness} is a stronger
 falsification test than a single scoreboard, and we reserve the word
@@ -464,12 +467,20 @@ F (recurrence) & recurrence $\mathbf{W}\to0$
 & drive, readout, decision map
 & Does the tested recurrence
 contribute at all? \\
+G (architecture) & hub $\to$ architecture~B
+($N=4000$, $p_{\mathrm{re}}=0.02$),
+same substrates \& protocol
+& substrates, profiles, seeds,
+decoders, decision map
+& Is the substrate ranking bound
+to the one hub size/density? \\
 \bottomrule
 \end{tabular}
 \end{table}
 Gates B/B2/C/D/D\,bis/F decompose one score into (substrate material)
-vs.\ (interface); Gate E sets the bar any memory claim must clear. All
-are run on the \emph{same} hub, seeds and profiles.
+vs.\ (interface); Gate E sets the bar any memory claim must clear; Gate~G
+checks the ranking is not architecture-bound. All
+are run on the \emph{same} seeds and profiles (Gate~G on a second hub).
 
 \section{Results}\label{sec:results}
 
@@ -630,6 +641,33 @@ none of the above is a recurrence artifact. This is a statement about
 \emph{this} hub at \emph{this} operating point, not a general claim
 that recurrence is computationally inert.
 
+\subsection{Architecture robustness of the ranking}\label{sec:archb}
+\begin{table}[H]
+\centering
+\caption{Same Gate D battery (five profiles, six seeds, identical
+substrates, decoders and decision map) on a second hub, architecture~B
+($N=4000$, $p_{\mathrm{re}}=0.02$, variance-normalized wiring), versus
+architecture~A of Sections~\ref{sec:hub}--\ref{sec:gatef}. $\dfloor$ is
+the improvement over the mean-predictor floor; ``info$-$null'' subtracts
+the matched dead-null floor.}
+\label{tab:archb}
+\input{tables/tab_archB.tex}
+\end{table}
+The LIF-vs-IZH gap could be an artifact of the one hub we happened to
+build. To test this, we rerun the \emph{entire} Gate D battery on a
+different architecture---larger and denser ($N=4000$, $p_{\mathrm{re}}=
+0.02$), with the same variance-normalized wiring so the per-neuron
+operating point stays comparable---while holding substrates, profiles,
+seeds, decoders and the decision map fixed. The ranking reproduces
+(Table~\ref{tab:archb}): LIF's carried information over the dead null is
+$+0.104$ (vs.\ $+0.103$ in architecture~A) and IZH's is $+0.004$
+(vs.\ $+0.001$), both far below LIF, with the dead null at the floor
+($-0.004$) and the same three criteria met (LIF real, IZH weak, null
+dead). The pooled canonical RMSE is likewise stable (LIF $0.165$
+vs.\ $0.168$; IZH $0.242$ vs.\ $0.239$). Within the range of hubs tested,
+then, the conclusion ``LIF carries linearly recoverable task information;
+IZH does not'' is not bound to a specific hub size or density.
+
 \subsection{Seed-level statistics at $n=20$}\label{sec:seeds20}
 \begin{table}[H]
 \centering
@@ -740,20 +778,22 @@ point; the protocol transfers, the numbers do not.
 
 \subsection{Future work}\label{sec:disc5}
 
-Three directions follow directly: (a) a second hub architecture (e.g.\
-different $N$, $p_{\mathrm{re}}$, or decision map) to test whether the
-substrate ranking is architecture-bound; (b) a structure-matching null
-with pairwise correlations to test substrate \emph{structure} rather
-than rates; (c) replaying the \emph{real} closed-loop data through the
+Two directions follow directly: (a) a \emph{structure}-matching null
+with pairwise correlations, to test substrate \emph{structure} rather
+than rates; (b) replaying the \emph{real} closed-loop data through the
 same gates, converting this open-loop instrument into a closed-loop
-falsification battery \cite{carmena2003,embodied_neurocomp}.
+falsification battery \cite{carmena2003,embodied_neurocomp}. Gate~G
+covers one alternative architecture; a broader sweep (connectivity
+topology, degree distribution, decision-map shape) would test the
+ranking further.
 
 \section{Reproducibility and data}\label{sec:repro}
 \begin{itemize}[nosep]
-\item Code: \path{sandbox/} git repo; Gates B/B2/C/D/D\,bis/E/F runners
+\item Code: \path{sandbox/} git repo; Gates B/B2/C/D/D\,bis/E/F/G runners
 (\path{gate_b/run.py}, \path{04_p2/gate_b2/run3.py}, \path{gate_d/run.py},
 \path{gate_d/run_mlp.py}, \path{gate_d/run_20seeds.py},
-\path{gate_e/run.py}) print JSON summaries into their \path{results/};
+\path{gate_d/run_archB.py}, \path{gate_e/run.py}) print JSON summaries
+into their \path{results/};
 tables/figures are \emph{generated} from those JSON artifacts by
 \path{build_figures_tables.py} (no hand-typed numbers).
 \item Gate C: \path{verify/verify_wr.py} (per-seed random readouts,
@@ -763,13 +803,16 @@ RNG $4242$) writes \path{verify_wr_summary.json}.
 \path{gate_d20_seed_stats.json}; the $6$-seed artifacts are untouched.
 Gate D\,bis: \path{gate_d/run_mlp.py} writes
 \path{gate_d/results/mlp/mlp_summary.json}.
+Gate~G (architecture~B): \path{gate_d/run_archB.py} patches the hub
+geometry (\path{N}, \path{p_re}) and writes
+\path{gate_d/results_archB/}; the architecture~A artifacts are untouched.
 \item Number audit: \path{verify/verify_paper_numbers.py} re-derives the
 quoted values from the JSON artifacts and exits non-zero on any
 mismatch.
 \item Environment: Python \SI{3.12}{}, numpy \SI{2.5}{},
 matplotlib; venv at \path{02\_cl/.venv312/}; \path{requirements.txt}
 pins versions.
-\item Scope: this note's claims rest on Gates B/B2/C/D/D\,bis/E/F only
+\item Scope: this note's claims rest on Gates B/B2/C/D/D\,bis/E/F/G only
 (all artifacts above). A companion closed-loop battery lives in the
 separate \texttt{surrogate\_cl/} repository; it is \emph{not}
 regenerated here and none of the results in this note depend on it

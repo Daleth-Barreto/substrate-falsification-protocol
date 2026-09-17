@@ -71,6 +71,7 @@ def main():
     gb2 = load("gate_b2v2_summary.json", root=os.path.join(HERE, "..", "04_p2", "gate_b2", "results"))
     mlp = load("mlp/mlp_summary.json", root=os.path.join(HERE, "gate_d", "results"))
     s20 = load("gate_d20_seed_stats.json", root=os.path.join(HERE, "gate_d", "results20"))
+    archb = load("archB_summary.json", root=os.path.join(HERE, "gate_d", "results_archB"))
     canonical = load("../../surrogate_cl/results/task_tracking.json")
 
     # ------------------------------------------------------------------ figure
@@ -349,9 +350,36 @@ def main():
     tab.append("\\end{tabular}")
     write_tab("tab_seeds20.tex", tab)
 
+    # ---- Tab. 8 — architecture robustness: same Gate D battery on a second
+    #      hub (N=4000, p_re=0.02, variance-normalized). Does the ranking hold?
+    tab = []
+    tab.append("% TABLA arquitectura B: misma bateria Gate D (5 perfiles x 6")
+    tab.append("% seeds) sobre un segundo hub N=4000, p_re=0.02.")
+    tab.append("% desde gate_d/results_archB/archB_summary.json (A = v1 N=2000)")
+    tab.append("\\begin{tabular}{llrrr}")
+    tab.append("\\toprule")
+    tab.append("architecture & substrate & $\\dfloor$ & info$-$null & "
+               "MI-sig \\\\")
+    tab.append("\\midrule")
+    for key, label in (("architecture_A", "A ($N{=}2000$, $p_{\\mathrm{re}}{=}0.01$)"),
+                       ("architecture_B", "B ($N{=}4000$, $p_{\\mathrm{re}}{=}0.02$)")):
+        a = archb[key]
+        for sn in ("lif", "izh"):
+            d = a[f"{sn}_carried_info"]
+            floor = a["null_carried_info"]
+            sig = a[f"{sn}_ridge_mi_sig_frac"]
+            tab.append(" & ".join([
+                label, SUB_LABEL[sn], fmt3(d), fmt3(d - floor), fmt3(sig),
+            ]) + r" \\")
+        label = ""  # only print the architecture label on its first row
+    tab.append("\\bottomrule")
+    tab.append("\\end{tabular}")
+    tab.append("% criteria_B: " + json.dumps(archb["criteria_B"]) + ".")
+    write_tab("tab_archB.tex", tab)
+
     print("WROTE figures: decoder_bars.png, canonical.png (+ATTRIBUTION)")
     print("WROTE tables: tab_results.tex, canonical_numbers.tex, "
-          "tab_gateb2.tex, tab_mlp.tex, tab_seeds20.tex")
+          "tab_gateb2.tex, tab_mlp.tex, tab_seeds20.tex, tab_archB.tex")
 
 
 if __name__ == "__main__":

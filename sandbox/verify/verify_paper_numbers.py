@@ -32,6 +32,7 @@ PATHS = {
     "wr": os.path.join(SB, "verify", "verify_wr_summary.json"),
     "gate_b2": os.path.join(REPO, "04_p2", "gate_b2", "results",
                             "gate_b2v2_summary.json"),
+    "archb": os.path.join(SB, "gate_d", "results_archB", "archB_summary.json"),
 }
 
 
@@ -63,6 +64,7 @@ def run(A):
         A["gate_b"], A["gate_d"], A["mlp"], A["gate_d20"],
         A["seeds20"], A["gate_e"], A["wr"], A["gate_b2"],
     )
+    ab = A["archb"]
 
     # ---- Table tab_hist: matched-dead marginal -------------------------
     r = np.asarray(b["calibration"]["poisson_rate"], dtype=float)
@@ -189,6 +191,26 @@ def run(A):
               0.0, row["poisson"]["delta"], 5e-4)
         check_eq(f"GateC collapse direction ({row['profile']} s{row['seed']})",
                  True, row["lif"]["delta"] > 0 and row["izh"]["delta"] > 0)
+
+    # ---- Gate G: architecture robustness (second hub) ----------------
+    aB, bB = ab["architecture_A"], ab["architecture_B"]
+    check_eq("GateG archB N", 4000, bB["N"])
+    check_eq("GateG archB p_re", 0.02, bB["P_RE"])
+    check("GateG archB LIF carried", 0.101, bB["lif_carried_info"], 5e-4)
+    check("GateG archB IZH carried", 0.000, bB["izh_carried_info"], 5e-4)
+    check("GateG archB null floor", -0.004, bB["null_carried_info"], 5e-4)
+    check("GateG archB LIF info-over-null", 0.104,
+          bB["lif_carried_info"] - bB["null_carried_info"], 5e-4)
+    check("GateG archB IZH info-over-null", 0.004,
+          bB["izh_carried_info"] - bB["null_carried_info"], 5e-4)
+    check("GateG archA LIF info-over-null", 0.103,
+          aB["lif_carried_info"] - aB["null_carried_info"], 5e-4)
+    check("GateG archA IZH info-over-null", 0.001,
+          aB["izh_carried_info"] - aB["null_carried_info"], 5e-4)
+    check("GateG archB LIF canon RMSE", 0.165, bB["canon_rmse_lif"], 5e-4)
+    check("GateG archB IZH canon RMSE", 0.242, bB["canon_rmse_izh"], 5e-4)
+    check_eq("GateG ranking reproduces", True,
+             ab["criteria_B"]["ranking_reproduces"])
 
     # ---- verdicts ------------------------------------------------------
     check_eq("Gate B verdict", "PASS", b["verdict"])
