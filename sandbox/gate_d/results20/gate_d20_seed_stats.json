@@ -1,0 +1,39 @@
+{
+  "izh": {
+    "mean_effect_vs_poisson": 0.008335276920836004,
+    "n_seeds": 20,
+    "paired_perm_p_one_sided": 0.0035599644003559963,
+    "se_effect": 0.002614602572827327,
+    "seeds_same_direction": 16
+  },
+  "lif": {
+    "mean_effect_vs_poisson": 0.10313644182902978,
+    "n_seeds": 20,
+    "paired_perm_p_one_sided": 9.99990000099999e-06,
+    "se_effect": 0.0013344603134878318,
+    "seeds_same_direction": 20
+  },
+  "seeds": [
+    1,
+    7,
+    13,
+    29,
+    55,
+    91,
+    2,
+    3,
+    5,
+    11,
+    17,
+    19,
+    23,
+    31,
+    37,
+    41,
+    43,
+    47,
+    53,
+    59
+  ],
+  "verdict": "n=20 seeds: LIF info-over-null +0.103 (paired perm p\u22481e-05, 20/20 seeds same direction); IZH +0.008 (p\u22480.00356, 16/20)."
+}
