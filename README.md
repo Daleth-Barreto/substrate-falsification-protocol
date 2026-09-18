@@ -29,11 +29,12 @@ verbatim over the same contract (sensors -> electrodes -> spikes -> decisions ->
 stimulation). The protocol turns this substitution into a load-bearing,
 falsifiable experiment.
 
-The central methodological claim: *"the substrate computes"* is **unfalsifiable**
-unless (a) the substrate is swapped for a dead substrate **matched** in
-single-neuron marginal firing statistics (mean rate, variance, silent fraction)
+The central methodological claim: a statement like *"the substrate computes"* is
+only testable when (a) the substrate is swapped for a dead substrate **matched**
+in single-neuron marginal firing statistics (mean rate, variance, silent fraction)
 while being statistically independent of the task, and (b) the readout is itself
-controlled.
+controlled. Without both controls the claim cannot be falsified; with them it
+can be tested and, if it fails, rejected.
 
 ## The four gates
 

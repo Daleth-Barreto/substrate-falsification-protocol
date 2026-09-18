@@ -1,0 +1,267 @@
+{
+  "calibration": {
+    "izh_k_ro": 0.2617813037337277,
+    "lif_k_ro": 0.017324647990321195
+  },
+  "criteria": {
+    "fp_control_clean": true,
+    "izh_all_null_types_l95": false,
+    "lif_all_null_types_l95": false
+  },
+  "experiment": "gate_b2v3",
+  "false_positive_control": {
+    "note": "drive_gain=0 (no task signal); circshift and taskshuf nulls",
+    "significant_cells": {
+      "noise": {
+        "izh": {
+          "circshift": 0,
+          "taskshuf": 0
+        },
+        "lif": {
+          "circshift": 0,
+          "taskshuf": 0
+        }
+      },
+      "ramp": {
+        "izh": {
+          "circshift": 0,
+          "taskshuf": 0
+        },
+        "lif": {
+          "circshift": 0,
+          "taskshuf": 0
+        }
+      },
+      "sine": {
+        "izh": {
+          "circshift": 0,
+          "taskshuf": 0
+        },
+        "lif": {
+          "circshift": 0,
+          "taskshuf": 0
+        }
+      }
+    }
+  },
+  "k_null": 10,
+  "null_suite": {
+    "blockshuffle": "per-neuron B-window block shuffle",
+    "circshift": "per-neuron circular shift (rotated sequence)",
+    "identityswap": "per-window permutation of neuron identity",
+    "taskshuf": "real counts verbatim; window-to-task alignment permuted (population correlations preserved exactly)"
+  },
+  "null_types": [
+    "circshift",
+    "blockshuffle",
+    "identityswap",
+    "taskshuf"
+  ],
+  "per_profile": {
+    "noise": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "circshift": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "identityswap": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "taskshuf": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "circshift": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "identityswap": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "taskshuf": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        }
+      }
+    },
+    "sine": {
+      "izh": {
+        "blockshuffle": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "circshift": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "identityswap": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "taskshuf": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        }
+      },
+      "lif": {
+        "blockshuffle": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "circshift": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "identityswap": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        },
+        "taskshuf": {
+          "p_min": 0.09090909090909091,
+          "signif_frac": 0.0,
+          "signif_l05": 0
+        }
+      }
+    }
+  },
+  "pooled": {
+    "izh": {
+      "blockshuffle": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      },
+      "circshift": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      },
+      "identityswap": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      },
+      "taskshuf": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      }
+    },
+    "lif": {
+      "blockshuffle": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      },
+      "circshift": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      },
+      "identityswap": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      },
+      "taskshuf": {
+        "n_cells": 4,
+        "signif_l05_frac": 0.0,
+        "signif_l05_n": 0
+      }
+    }
+  },
+  "profiles": [
+    "sine",
+    "noise"
+  ],
+  "readout_invariance": {
+    "mlp_hyperparameters": {
+      "epochs": 120,
+      "hidden": 32,
+      "l2": 0.001,
+      "lr": 0.01,
+      "seed": 20260917
+    },
+    "note": "canonical vs fixed ridge vs fixed MLP on circshift null, sine",
+    "per_substrate": {
+      "izh": [
+        {
+          "mi_null_mlp_mean": 0.1013357643024192,
+          "mi_null_ridge_mean": 0.0796875912933827,
+          "mi_obs_mlp": 0.4893135617583166,
+          "mi_obs_ridge": 0.6441317738481004,
+          "p_canon": 0.047619047619047616,
+          "p_mlp": 0.047619047619047616,
+          "p_ridge": 0.047619047619047616,
+          "seed": 1
+        },
+        {
+          "mi_null_mlp_mean": 0.09231459310371722,
+          "mi_null_ridge_mean": 0.09270207177315808,
+          "mi_obs_mlp": 0.5689716836758747,
+          "mi_obs_ridge": 0.7133924203130779,
+          "p_canon": 0.047619047619047616,
+          "p_mlp": 0.047619047619047616,
+          "p_ridge": 0.047619047619047616,
+          "seed": 3
+        }
+      ],
+      "lif": [
+        {
+          "mi_null_mlp_mean": 0.14140867924308875,
+          "mi_null_ridge_mean": 0.1148584387733796,
+          "mi_obs_mlp": 0.6795139019307063,
+          "mi_obs_ridge": 0.8204388742582785,
+          "p_canon": 0.047619047619047616,
+          "p_mlp": 0.047619047619047616,
+          "p_ridge": 0.047619047619047616,
+          "seed": 1
+        },
+        {
+          "mi_null_mlp_mean": 0.196656318053694,
+          "mi_null_ridge_mean": 0.07192914318554895,
+          "mi_obs_mlp": 0.6636262372502901,
+          "mi_obs_ridge": 0.692423508561992,
+          "p_canon": 0.047619047619047616,
+          "p_mlp": 0.047619047619047616,
+          "p_ridge": 0.047619047619047616,
+          "seed": 3
+        }
+      ]
+    }
+  },
+  "seed_set_note": "24 fixed seeds; B2v2 set {1,7,13,29,55,91} is a subset",
+  "seeds": [
+    1,
+    3
+  ],
+  "supersedes": "gate_b2v2 (run3.py); B2v2 artifacts left untouched",
+  "verdict": "REVIEW"
+}

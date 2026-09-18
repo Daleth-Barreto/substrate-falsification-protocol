@@ -5,15 +5,17 @@
 \toprule
 null type & substrate & sig MI cells & total & frac. \\
 \midrule
-\texttt{circshift} & LIF & 54 & 54 & 1.00 \\
-\texttt{circshift} & Izhikevich & 54 & 54 & 1.00 \\
-\texttt{blockshuffle} & LIF & 54 & 54 & 1.00 \\
-\texttt{blockshuffle} & Izhikevich & 54 & 54 & 1.00 \\
-\texttt{identityswap} & LIF & 54 & 54 & 1.00 \\
-\texttt{identityswap} & Izhikevich & 54 & 54 & 1.00 \\
+\texttt{circshift} & LIF & 216 & 216 & 1.00 \\
+\texttt{circshift} & Izhikevich & 216 & 216 & 1.00 \\
+\texttt{blockshuffle} & LIF & 216 & 216 & 1.00 \\
+\texttt{blockshuffle} & Izhikevich & 216 & 216 & 1.00 \\
+\texttt{identityswap} & LIF & 216 & 216 & 1.00 \\
+\texttt{identityswap} & Izhikevich & 216 & 216 & 1.00 \\
+\texttt{taskshuf} & LIF & 216 & 216 & 1.00 \\
+\texttt{taskshuf} & Izhikevich & 216 & 216 & 1.00 \\
 \bottomrule
 \end{tabular}
 
 % FP control (drive_gain=0, no task signal): cells per profile =
-% {"noise": {"izh": 0, "lif": 0}, "ramp": {"izh": 0, "lif": 0}, "sine": {"izh": 0, "lif": 0}} | criterion fp_control_clean=True.
-% Readout invariance (fixed weights): 12/12 cells, p=0.0476.
+% {"noise": {"izh": {"circshift": 0, "taskshuf": 0}, "lif": {"circshift": 0, "taskshuf": 0}}, "ramp": {"izh": {"circshift": 0, "taskshuf": 0}, "lif": {"circshift": 0, "taskshuf": 0}}, "sine": {"izh": {"circshift": 0, "taskshuf": 0}, "lif": {"circshift": 0, "taskshuf": 0}}} | criterion fp_control_clean=True.
+% Readout invariance (fixed weights): 48/48 cells, p=0.0476.

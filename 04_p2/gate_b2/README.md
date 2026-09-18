@@ -1,7 +1,8 @@
 # Gate B2v2 - Paired population null with null-suite, FP control, readout invariance
 
-Extended validation of the substrate-carried task information claim, prepared for
-a methods-level submission (IEEE TNNLS).  Three independent controls rule out
+Extended validation of the substrate-carried task information claim, prepared
+for a methods-level journal submission (TCDS / Cognitive Systems Research first;
+Neural Networks good; TNNLS ambitious).  Three independent controls rule out
 concealed confounds that could explain Gate B's separation:
 
 1. **Null suite** -- three paired-surrogate constructions preserving different
@@ -165,7 +166,73 @@ Outputs `results/gate_b2v2_summary.json` and `results/gate_b2v2.png`.
 | file | purpose |
 |------|---------|
 | `run2.py` | Gate B2v1 (circular-shift null only, baseline battery) |
-| `run3.py` | Gate B2v2 (this file's battery) |
+| `run3.py` | Gate B2v2 (canonical battery, 6 seeds) |
+| `run4.py` | Gate B2v3 (review-responsive battery: 24 seeds, task-shuffle null, MLP readout) |
 | `nulls.py` | Paired-null generators: circshift, blockshuffle, identityswap |
 | `hub.py`  | Substrate simulators (LIF, IZH, PoissonNull) |
 | `metrics.py` | MI, TE, bias-corrected permutation tests |
+
+---
+
+## Gate B2v3 (review-responsive battery -- `run4.py`)
+
+Second-paper battery. `run4.py` does **not** touch B2v2 artifacts
+(`run3.py` output `results/gate_b2v2_summary.json` stays canonical). B2v3 hardens
+the B2v2 evidence base on the three axes a reviewer asked for.
+
+1. **Extended seeds**: 24 fixed seeds
+   `{1,3,7,13,17,29,31,37,41,47,53,55,59,61,67,71,73,79,83,89,91,97,101,103}`
+   (the B2v2 set `{1,7,13,29,55,91}` is a subset). Pooled over the 9 task profiles
+   → 216 cells per substrate per null type.
+2. **task-shuffle null (4th construction)**: the real count matrix is used
+   verbatim and only the window-to-task pairing `u` is permuted. Preserves every
+   per-neuron marginal, every cross-neuron correlation and the full population
+   temporal envelope exactly; destroys only alignment.
+3. **Fixed-readout robustness (Gate D recomputation)**: in addition to the fixed
+   ridge (as in B2v2), a fixed single-hidden-layer MLP readout is fitted once on
+   real data (h=32, tanh, l2=1e-3, Adam lr=1e-2, <=120 epochs, best epoch on the
+   validation slice) and applied unchanged to the null matrices. Pure NumPy, no
+   new dependencies.
+
+### Battery (run4.py, full)
+
+- Main: 10 profiles x 24 seeds x 2 substrates = 480 real runs; each run x 4 null
+  types x K=50 = 200 paired null evaluations → 96,000 null replicates.
+- False-positive control: 3 profiles x 24 seeds x 2 substrates, drive gain = 0,
+  evaluated under circshift **and** task-shuffle.
+- Readout invariance: sine profile x 24 seeds x 2 substrates, circshift null,
+  K_r = 20, canonical vs ridge vs MLP.
+
+### Results (canonical, B2v3)
+
+| substrate | circshift | blockshuffle | identityswap | task-shuffle |
+|-----------|-----------|--------------|--------------|--------------|
+| LIF       | 216/216   | 216/216      | 216/216      | 216/216      |
+| IZH       | 216/216   | 216/216      | 216/216      | 216/216      |
+
+False positives (drive = 0): **0/24** for every (profile, substrate, null)
+combination tested.
+
+Readout-robustness (sine, 24 seeds): canonical 24/24, fixed ridge 24/24, fixed
+MLP 24/24. Mean MI observed vs null: ridge LIF 0.693/0.091, IZH 0.643/0.076;
+MLP LIF 0.727/0.166, IZH 0.542/0.114. The MLP null-floor is higher than the
+ridge's (more flexible readout extracts a little more from surrogates) but the
+observed decoding clears it in every seed.
+
+Baseline (negative control): 0/24 on every null/substrate.
+
+**VERDICT: PASS** (all null types >= 95% pooled on both substrates + clean FP).
+
+### Reproduce
+
+```powershell
+# full B2v3 battery (~60-90 min on a laptop)
+& "C:\Proyectos\papers\Icra2027\02_cl\.venv312\Scripts\python.exe" run4.py
+
+# smoke test (2 seeds x 2 profiles, K=10 floor => all p_perm = 1/11)
+& "C:\Proyectos\papers\Icra2027\02_cl\.venv312\Scripts\python.exe" run4.py --smoke
+```
+
+Outputs `results/gate_b2v3_summary.json`, `results/gate_b2v3.png` and (smoke)
+`results/gate_b2v3_smoke.json`. All seeds/K/hyperparameters are module constants,
+so the artifacts are rerunnable byte-for-byte on CPU (NumPy/SciPy only).

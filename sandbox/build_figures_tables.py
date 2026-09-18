@@ -68,9 +68,9 @@ def main():
     gd_raw = load_raw_gated()
     ge = load("gate_e/results/gate_e_summary.json")
     gcw = load("verify/verify_wr_summary.json")
-    gb2 = load("gate_b2v2_summary.json", root=os.path.join(HERE, "..", "04_p2", "gate_b2", "results"))
+    gb2 = load("gate_b2v3_summary.json", root=os.path.join(HERE, "..", "04_p2", "gate_b2", "results"))
     mlp = load("mlp/mlp_summary.json", root=os.path.join(HERE, "gate_d", "results"))
-    s20 = load("gate_d20_seed_stats.json", root=os.path.join(HERE, "gate_d", "results20"))
+    s24 = load("gate_d24_seed_stats.json", root=os.path.join(HERE, "gate_d", "results24"))
     archb = load("archB_summary.json", root=os.path.join(HERE, "gate_d", "results_archB"))
     canonical = load("../../surrogate_cl/results/task_tracking.json")
 
@@ -298,8 +298,9 @@ def main():
     tab.append("% FP control (drive_gain=0, no task signal): cells per profile =")
     tab.append(f"% {json.dumps(gb2['false_positive_control']['significant_cells'])} "
                f"| criterion fp_control_clean={gb2['criteria']['fp_control_clean']}.")
-    rid_n = sum(len(v) for v in gb2["ridge_invariance"].values())
-    rid_p = gb2["ridge_invariance"]["lif"][0]["p_ridge"]
+    rid = gb2["readout_invariance"]["per_substrate"]
+    rid_n = sum(len(v) for v in rid.values())
+    rid_p = rid["lif"][0]["p_ridge"]
     tab.append(f"% Readout invariance (fixed weights): {rid_n}/{rid_n} cells, "
                f"p={rid_p:.4f}.")
     write_tab("tab_gateb2.tex", tab)
@@ -329,18 +330,18 @@ def main():
     tab.append("% lam in {1e-3,1e-2,1e-1,1}, selected on validation).")
     write_tab("tab_mlp.tex", tab)
 
-    # ---- Tab. 7 — n=20 seeds seed-level paired statistics (Gate D repetition)
+    # ---- Tab. 7 — n=24 seeds seed-level paired statistics (Gate D repetition)
     tab = []
-    tab.append("% TABLA seed-level n=20: efecto vs null Poisson por seed (pooled 5")
+    tab.append("% TABLA seed-level n=24: efecto vs null Poisson por seed (pooled 5")
     tab.append("% perfiles), permutation emparejada exacta.")
-    tab.append("% desde gate_d/results20/gate_d20_seed_stats.json")
+    tab.append("% desde gate_d/results24/gate_d24_seed_stats.json")
     tab.append("\\begin{tabular}{lrrrr}")
     tab.append("\\toprule")
     tab.append("substrate & $\\Delta$ (vs null) & SE & paired perm $p$ & "
                "seeds same dir \\\\")
     tab.append("\\midrule")
     for sn in ("lif", "izh"):
-        d = s20[sn]
+        d = s24[sn]
         tab.append(" & ".join([
             SUB_LABEL[sn], fmt3(d["mean_effect_vs_poisson"]), fmt3(d["se_effect"]),
             f"{d['paired_perm_p_one_sided']:.4g}",
@@ -348,7 +349,7 @@ def main():
         ]) + r" \\")
     tab.append("\\bottomrule")
     tab.append("\\end{tabular}")
-    write_tab("tab_seeds20.tex", tab)
+    write_tab("tab_seeds24.tex", tab)
 
     # ---- Tab. 8 — architecture robustness: same Gate D battery on a second
     #      hub (N=4000, p_re=0.02, variance-normalized). Does the ranking hold?

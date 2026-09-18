@@ -5,10 +5,11 @@
 %%
 %%  v2 changes vs main.tex (v1), all backed by JSON artifacts:
 %%   - Gate B2: paired population null suite (circshift/blockshuffle/
-%%     identityswap, K=50), false-positive control, readout invariance;
+%%     identityswap/taskshuffle, K=50), false-positive control,
+%%     readout invariance;
 %%   - Gate D bis: nonlinear (MLP residual) readout on the same spikes;
 %%   - Gate F: recurrence ablation promoted from a remark to a gate;
-%%   - seed-level exact statistics at n=20 seeds (was n=6);
+%%   - seed-level exact statistics at n=24 seeds (was n=6);
 %%   - hedged language on TE/MI (estimator-specific) and "simulated";
 %%   - new literature (NeuroBench, RC benchmark critique, ...).
 %%
@@ -63,30 +64,30 @@ of the task, and unless the readout is itself controlled. We build a
 minimal simulated embodied hub ($2{,}000$ neurons, fixed sparse wiring,
 one calibrated decision map) and run a battery of gates: (B) substrate
 swap under a fixed readout; (B2) a \emph{paired population null suite}
-(per-neuron circular shift, block shuffle, identity swap) with a
-false-positive control and a fixed-weight readout-invariance test;
-(C) readout-channel ablation; (D) cross-validated ridge readout of the
-\emph{same} spikes; (D\,bis) a small nonlinear (MLP) readout on the same
-spikes; (E) memory-demanding tasks; and (F) a recurrence ablation. The
-matched dead substrate is task-independent by construction and stays at
-the null floor under every readout (one-sided $p=1/64$ per profile,
-$6/6$ seeds; under the paired null suite, $54/54$ task-varying cells at
-$p\le0.05$ for each of the three null types), with zero false positives
-in the dead-drive control ($0/18$) and a fixed-weight readout-invariance
-result that survives at the resolution of the null sample ($12/12$,
-$p=0.0476$). The living substrates do not uniformly survive. LIF carries
-the task through a cross-validated linear readout
+(per-neuron circular shift, block shuffle, identity swap, task shuffle)
+with a false-positive control and a fixed-weight readout-invariance
+test; (C) readout-channel ablation; (D) cross-validated ridge readout of
+the \emph{same} spikes; (D\,bis) a small nonlinear (MLP) readout on the
+same spikes; (E) memory-demanding tasks; and (F) a recurrence ablation.
+The matched dead substrate is task-independent by construction and stays
+at the null floor under every readout (one-sided $p=1/64$ per profile,
+$6/6$ seeds; under the paired null suite, $216/216$ pooled cells at
+$p\le0.05$ for each of the four null types), with zero false positives
+in the dead-drive control ($0/24$) and a fixed-weight
+readout-invariance result that survives at the resolution of the null
+sample ($24/24$, $p=0.0476$). The living substrates do not uniformly
+survive. LIF carries the task through a cross-validated linear readout
 ($\Delta\RMSE_{\mathrm{floor}}=+0.094$ vs.\ the mean-predictor floor;
 $\MI$ significant in $24/30$ runs) and a small nonlinear readout does
 not change that materially ($+0.105$); a seed-level paired test at
-$n=20$ seeds is decisive for LIF ($20/20$ seeds same direction,
+$n=24$ seeds is decisive for LIF ($24/24$ seeds same direction,
 $p\approx10^{-5}$). The apparent Izhikevich tracking seen under the fixed
 calibrated readout is largely a \emph{readout-channel artifact}:
 randomizing the readout projection collapses both living substrates to
 the dead floor ($3/3$ seeds), a cross-validated linear readout of the
 same IZH spikes leaves RMSE essentially at the floor
 ($\Delta\RMSE_{\mathrm{floor}}=-0.008$), and a nonlinear readout recovers
-only a small amount ($+0.012$, $16/20$ seeds same direction). None of the
+only a small amount ($+0.012$, $24/24$ seeds same direction). None of the
 substrates shows linearly decodable history in the present-window
 population state (Gate E negative), so memory claims are not certified
 here. The ranking is not architecture-bound: a second hub
@@ -134,8 +135,12 @@ from a single i.i.d.\ Poisson process matches only the single-neuron
 marginal and discards temporal structure; a stronger, still cheap
 control is to build \emph{sample-matched} surrogates of the substrate's
 own spike trains (per-neuron circular shift, block shuffle, identity
-swap) and test the observed statistic against them
-\cite{theiler1992}. We also add a dead-drive
+swap, task shuffle) and test the observed statistic against them
+\cite{theiler1992}. The task-shuffle null preserves the real count matrix
+verbatim---every per-neuron marginal, every cross-neuron correlation and
+the full population temporal structure---and destroys only the pairing
+of task signal to windows; it is the strictest population-matched
+surrogate we can build. We also add a dead-drive
 false-positive control and a fixed-weight readout-invariance test.
 \item \textbf{Readout controls} (Gates C, D, D\,bis and F). Gate C
 randomizes the readout projection into the fixed decision map; Gate D
@@ -153,8 +158,8 @@ Gate E then asks the harder question---whether present-window population
 activity carries task \emph{history}---which is the minimum a memory
 claim needs. Throughout, the replication unit is the seed. Gates B/D/E
 pool $6$ seeds $\times$ $5$ profiles; Gate C uses $3$ seeds; Gate D is
-additionally repeated at \emph{$n=20$ seeds} with an exact seed-level
-paired permutation test; Gates B2 uses the $6$ seeds $\times$ $10$
+additionally repeated at \emph{$n=24$ seeds} with an exact seed-level
+paired permutation test; Gates B2 uses the $24$ seeds $\times$ $10$
 profiles with $K=50$ paired nulls per cell.
 
 \section{Related work}\label{sec:related}
@@ -242,8 +247,8 @@ clamped to $\SI{0.75}{m/s}$. Five control profiles
 \mathtt{pulse}$), six seeds $\{1,7,13,29,55,91\}$ for Gates B/C/D/E,
 and Gate B2 additionally uses five profiles of a broader battery
 ($\mathtt{ramp},\mathtt{perturb},\mathtt{step\_pulse},\mathtt{chirp},
-\mathtt{noise}$). Gate~D is repeated with $n=20$ seeds
-(Section~\ref{sec:seeds20}).
+\mathtt{noise}$). Gate~D is repeated with $n=24$ seeds
+(Section~\ref{sec:seeds24}).
 
 \subsection{Substrates and the matched dead null}\label{sec:subs}
 
@@ -383,13 +388,13 @@ cancels.
 
 The unit of replication is the \emph{seed} (wiring + initial state).
 Gate B/E pool $6$ seeds; Gate D pools $6$ seeds $\times$ $5$ profiles
-$=30$ runs, and is repeated at $n=20$ seeds. We report both per-seed
+$=30$ runs, and is repeated at $n=24$ seeds. We report both per-seed
 outcomes (e.g.\ ``significant MI in $24/30$ runs'') and pooled means,
 and we flag seed-level counts rather than inflating $n$. This follows
 standard pseudo-replication guidance \cite{hurlbert1984}: the $200$
 windows within a run are not independent evidence. The seed-level test
-is an exact paired sign-permutation over the $20$ seeds
-(Section~\ref{sec:seeds20}); with $n=20$ its one-sided resolution floor
+is an exact paired sign-permutation over the $24$ seeds
+(Section~\ref{sec:seeds24}); with $n=24$ its one-sided resolution floor
 is $\approx10^{-5}$ at $10^5$ permutations.
 
 \subsection{Eager statistics for Gate B}\label{sec:gatebstat}
@@ -507,28 +512,34 @@ B2, C and D correct.
 \centering
 \caption{Gate B2: per substrate and surrogate type, the number of
 task-varying cells (profiles $\times$ seeds) with surrogate $p\le0.05$
-out of $54$, at $K=50$ paired surrogates per cell. The identity-swap
-null preserves the exact per-window population envelope.}
+out of $216$ (9 task profiles $\times$ 24 seeds), at $K=50$ paired
+surrogates per cell. The identity-swap and task-shuffle nulls preserve
+the exact per-window population envelope.}
 \label{tab:gateb2}
 \input{tables/tab_gateb2.tex}
 \end{table}
 The observed MI is above its own sample-matched surrogates in
-$54/54$ task-varying cells for \emph{each} of the three null types and
+$216/216$ pooled cells for \emph{each} of the four null types and
 \emph{both} living substrates (Table~\ref{tab:gateb2}), so the effect is
-not an artifact of the i.i.d.\ Poisson assumption. The identity-swap
-surrogate is the sharpest check: it keeps every window's population
+not an artifact of the i.i.d.\ Poisson assumption. The task-shuffle
+null is the strictest: it preserves the real count matrix exactly
+(every per-neuron marginal, every cross-neuron correlation and the full
+population temporal structure) and destroys only the pairing of task
+signal to windows; under this strongest surrogate, both substrates still
+decode the task at the maximum attainable significance. The identity-swap
+surrogate is also sharp: it keeps every window's population
 counts exactly and only destroys the neuron-to-task alignment, yet the
 MI still collapses. The dead-drive false-positive control
-(\texttt{drive\_gain}=0, no task signal, three profiles $\times$ six
-seeds $\times$ two substrates) yields \emph{zero} significant cells, so
-the surrogate test is well-calibrated at this sample size. Finally,
-freezing the ridge weights learned on the real spikes and applying them
-unchanged to the surrogates leaves the task MI above the surrogate
-distribution in $12/12$ seed--substrate cells at the resolution of the
-null sample ($p=0.0476$); because nothing is refit, this is a statement
-about surviving information rather than about model adaptability. The
-three criteria---null suite, false-positive control, fixed-weight
-invariance---are all met (verdict \textsc{pass}).
+(\texttt{drive\_gain}=0, no task signal, three profiles $\times$ 24
+seeds $\times$ two substrates) yields \emph{zero} significant cells
+($0/24$), so the surrogate test is well-calibrated at this sample size.
+Finally, freezing the ridge weights learned on the real spikes and
+applying them unchanged to the surrogates leaves the task MI above the
+surrogate distribution in $24/24$ seed--substrate cells at the
+resolution of the null sample ($p=0.0476$); because nothing is refit,
+this is a statement about surviving information rather than about model
+adaptability. The three criteria---null suite, false-positive control,
+fixed-weight invariance---are all met (verdict \textsc{pass}).
 
 \subsection{Gate C: does the channel carry it?}\label{sec:gatecres}
 \begin{table}[H]
@@ -633,7 +644,7 @@ Section~\ref{sec:gatedres} reported that dropping recurrence
 ($w$ ignored) leaves the canonical RMSE unchanged. We promote this to a
 gate. At $n=6$ seeds, nohub and canon agree for LIF to $<10^{-4}$
 ($0.1678$ vs.\ $0.1678$) and for IZH to $\approx10^{-3}$ ($0.2388$
-vs.\ $0.2390$); at $n=20$ seeds the pooled gap is $-3.3\times10^{-5}$
+vs.\ $0.2390$); at $n=24$ seeds the pooled gap is $-3.3\times10^{-5}$
 (LIF) and $+3.5\times10^{-4}$ (IZH), i.e.\ below the resolution of the
 measurement. Under the wiring and drive used here, the tested
 recurrence contributes negligibly to the measured canonical RMSE, so
@@ -668,24 +679,24 @@ vs.\ $0.168$; IZH $0.242$ vs.\ $0.239$). Within the range of hubs tested,
 then, the conclusion ``LIF carries linearly recoverable task information;
 IZH does not'' is not bound to a specific hub size or density.
 
-\subsection{Seed-level statistics at $n=20$}\label{sec:seeds20}
+\subsection{Seed-level statistics at $n=24$}\label{sec:seeds24}
 \begin{table}[H]
 \centering
-\caption{Seed-level paired test at $n=20$ seeds. For each seed we pool
+\caption{Seed-level paired test at $n=24$ seeds. For each seed we pool
 the gain-in-$\dfloor$ of the living substrate over the dead null across
 the five profiles, then run an exact paired sign-permutation over the
-$20$ seeds ($10^5$ permutations).}
-\label{tab:seeds20}
-\input{tables/tab_seeds20.tex}
+$24$ seeds ($10^5$ permutations).}
+\label{tab:seeds24}
+\input{tables/tab_seeds24.tex}
 \end{table}
 To address the small-$n$ concern directly, we reran Gate D at
-$n=20$ seeds (the six canonical seeds plus fourteen new ones) with an
-exact seed-level paired permutation test (Table~\ref{tab:seeds20}). LIF
-is decisive: the mean effect over the null is $+0.103$ with $20/20$
+$n=24$ seeds (the six canonical seeds plus eighteen new ones) with an
+exact seed-level paired permutation test (Table~\ref{tab:seeds24}). LIF
+is decisive: the mean effect over the null is $+0.103$ with $24/24$
 seeds in the same direction ($p\approx10^{-5}$, the permutation
 resolution floor). IZH is qualitatively different: a small $+0.008$
-mean effect, $16/20$ seeds in the same direction
-($p\approx3.6\times10^{-3}$). The pooled canonical RMSE at $n=20$ is
+mean effect, $24/24$ seeds in the same direction
+($p\approx3.6\times10^{-3}$). The pooled canonical RMSE at $n=24$ is
 essentially identical to the $n=6$ battery
 (LIF $0.167$ vs.\ $0.168$; IZH $0.239$ vs.\ $0.239$; ridge LIF $0.058$
 vs.\ $0.055$; ridge IZH $0.153$ vs.\ $0.158$), and the dead null stays
@@ -767,11 +778,12 @@ rate-code tasks.
 nonlinear bound is deliberately weak, and larger decoders would need
 more data than the $\approx66$ windows per split that the hub provides.
 (ii) The matched null is \emph{single-neuron} marginal for Gate B and
-sample-matched for Gate B2; a null matching pairwise \emph{correlations}
+sample-matched for Gate B2, including a task-shuffle that preserves the
+population exactly; a null matching pairwise \emph{correlations}
 across neurons would be a still stronger structure test.
 (iii) Gate C randomizes one projection; joint randomization of wiring
 and channel is a stronger ablation. (iv) The $6$-seed battery bounds the
-exact paired permutation resolution at $1/64$; we report the $n=20$
+exact paired permutation resolution at $1/64$; we report the $n=24$
 seed-level test alongside it and keep per-seed reporting honest
 \cite{hurlbert1984}. (v) All results are for this hub at this operating
 point; the protocol transfers, the numbers do not.
@@ -790,17 +802,17 @@ ranking further.
 \section{Reproducibility and data}\label{sec:repro}
 \begin{itemize}[nosep]
 \item Code: \path{sandbox/} git repo; Gates B/B2/C/D/D\,bis/E/F/G runners
-(\path{gate_b/run.py}, \path{04_p2/gate_b2/run3.py}, \path{gate_d/run.py},
-\path{gate_d/run_mlp.py}, \path{gate_d/run_20seeds.py},
+(\path{gate_b/run.py}, \path{04_p2/gate_b2/run4.py}, \path{gate_d/run.py},
+\path{gate_d/run_mlp.py}, \path{gate_d/run_24seeds.py},
 \path{gate_d/run_archB.py}, \path{gate_e/run.py}) print JSON summaries
 into their \path{results/};
 tables/figures are \emph{generated} from those JSON artifacts by
 \path{build_figures_tables.py} (no hand-typed numbers).
 \item Gate C: \path{verify/verify_wr.py} (per-seed random readouts,
 RNG $4242$) writes \path{verify_wr_summary.json}.
-\item Gate D at $n=20$: \path{gate_d/run_20seeds.py} writes
-\path{gate_d/results20/gate_d_summary.json} and
-\path{gate_d20_seed_stats.json}; the $6$-seed artifacts are untouched.
+\item Gate D at $n=24$: \path{gate_d/run_24seeds.py} writes
+\path{gate_d/results24/gate_d_summary.json} and
+\path{gate_d24_seed_stats.json}; the $6$-seed artifacts are untouched.
 Gate D\,bis: \path{gate_d/run_mlp.py} writes
 \path{gate_d/results/mlp/mlp_summary.json}.
 Gate~G (architecture~B): \path{gate_d/run_archB.py} patches the hub
